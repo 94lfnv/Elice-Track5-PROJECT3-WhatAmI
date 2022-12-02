@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { CommonComponentType } from '../../types/common/commonComponentType';
+import { font } from '../../assets/styles/common/fonts';
 
 interface MyModalProps extends CommonComponentType {
   isOpen: boolean;
@@ -12,36 +13,43 @@ const MyModal = ({
   children,
 }: MyModalProps) => {
   return (
-    <MyModalBackdrop isOpen={isOpen}>
-      <MyModalWrapper>
+    <MyModalBackdrop isOpen={isOpen} onClick={onModalStateChangeEvent}>
+      <MyModalWrapper onClick={(e) => e.stopPropagation()}>
         {children}
-        <button onClick={onModalStateChangeEvent}>Cancel</button>
       </MyModalWrapper>
+      <CloseButton>X</CloseButton>
     </MyModalBackdrop>
   );
 };
 
+export default MyModal;
+
 const MyModalBackdrop = styled.div<{ isOpen: boolean }>`
   position: fixed;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.5);
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 0;
+  z-index: 10000;
   ${(props) => (props.isOpen ? 'display: block' : 'display: none')};
 `;
 
 const MyModalWrapper = styled.div`
-  width: auto;
-  height: auto;
-  position: fixed;
   top: 50%;
   left: 50%;
-  padding: 1rem;
-  text-align: center;
-  tranform: translate(-50%, -50%);
-  bakcground-color: white;
+  position: absolute;
 `;
 
-export default MyModal;
+const CloseButton = styled.button`
+  float: right;
+  border: none;
+  background: none;
+  margin: 2.5rem 3rem;
+  height: 3rem;
+  width: 3.5rem;
+  font-size: 2.5rem;
+  color: white;
+  cursor: pointer;
+  font-family: ${font.bold};
+`;
