@@ -1,67 +1,76 @@
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { font } from '../assets/styles/common/fonts';
-import useModal from '../hooks/modal/useModal';
-import PuppyCard from '../components/reviewBoard/PuppyCard';
-import MyModal from '../components/modal/MyModal';
-import WritingEditor from '../components/reviewBoard/WritingEditor';
-import { SearchBox } from '../assets/styles/common/commonComponentStyle';
-import ContentsViewer from '../components/reviewBoard/ContentsViewer';
+import {
+  EditDelBtn,
+  SearchBox,
+} from '../assets/styles/common/commonComponentStyle';
+import { theme } from '../assets/styles/common/palette';
+import LikeBtn from '../components/common/LikeBtn';
+import StickyNote2Icon from '@mui/icons-material/StickyNote2';
+import PaginateButton from '../components/pagination/PaginateButton';
+import CommuWritingModal from '../components/modal/CommuWritingModal';
+import CommuContentsModal from '../components/modal/CommuContentsModal';
+import { getCurrentCommuListRequest } from '../apis/communityFetcher';
+import { CommunityType } from '../types/community/communityType';
 
-const LikedCommuPage = () => {
-  const [isCreateOpen, handleCreateStateChange] = useModal();
-  const [isContentsOpen, handelContentsStateChange] = useModal();
+const LikedCommuPage = (props: CommunityType) => {
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [commuInfo, setCommuInfo] = useState<CommunityType>();
+
+  useEffect(() => {
+    let getParameter = (key: string) => {
+      return new URLSearchParams(location.search).get(key);
+    };
+    const id = getParameter('id');
+    const getCommunityData = async () => {
+      const res = await getCurrentCommuListRequest(`communities/posts/${id}`);
+      setCommuInfo(res);
+    };
+    getCommunityData();
+  }, []);
 
   return (
-    <>
-      <MyModal
-        isOpen={isCreateOpen}
-        onModalStateChangeEvent={handleCreateStateChange}
-      >
-        <WritingEditor />
-      </MyModal>
-      <MyModal
-        isOpen={isContentsOpen}
-        onModalStateChangeEvent={handelContentsStateChange}
-      >
-        <ContentsViewer />
-      </MyModal>
-      <BigBox>
-        <CommunityBox>
-          <IntroBox>
-            <ImageBox />
-            <NameBox>
-              <CommuName>커뮤니티 이름</CommuName>
-              <CommuIntro>
-                커뮤니티 소개가 들어가는 칸입니다. 귀여운 내 새끼 나만 볼 수는
-                없죠! 마구마구 자랑해주시길 바랍니다. 그래서 만든 커뮤니티예요.
-                여러분 마구마구 자랑을 갈겨 주세요!
-              </CommuIntro>
-              <EditBtn>정보 수정</EditBtn>
-            </NameBox>
-            <BtnBox>
-              <ChatBtn>채팅방 입장</ChatBtn>
-              <WriteBtn onClick={handleCreateStateChange}>글쓰기</WriteBtn>
-            </BtnBox>
-          </IntroBox>
-          <SmallBox>
-            <SearchBox style={{ height: '1.8rem' }}>
-              <input></input>
-              <button>검색</button>
-            </SearchBox>
-            <InfoBox>
-              <div>좋아요 수</div>
-              <div>게시물 수</div>
-            </InfoBox>
-          </SmallBox>
-          <ContentsBox>
-            <PuppyCard
-              onCardModalClickEvent={handelContentsStateChange}
-            ></PuppyCard>
-          </ContentsBox>
-          <PaginationBox>페이지네이션 자리</PaginationBox>
-        </CommunityBox>
-      </BigBox>
-    </>
+    <BigBox>
+      <CommunityBox>
+        <IntroBox>
+          <ImageBox>
+            <img src={commuInfo?.communityImage} />
+          </ImageBox>
+          <NameBox>
+            <CommuName>
+              {commuInfo?.name}
+              <EditDelBtn style={{ marginLeft: '10px' }}>수정</EditDelBtn>
+            </CommuName>
+            <CommuIntro>{commuInfo?.introduction}</CommuIntro>
+          </NameBox>
+          <WritingBtnBox>
+            <CommuWritingModal />
+          </WritingBtnBox>
+        </IntroBox>
+        <SmallBox>
+          <SearchBox style={{ height: '1.8rem' }}>
+            <input></input>
+            <button>검색</button>
+          </SearchBox>
+          <InfoBox>
+            <div>
+              <LikeBtn />
+              &nbsp;10
+            </div>
+            <div>
+              <StickyNote2Icon />
+              &nbsp;10
+            </div>
+          </InfoBox>
+        </SmallBox>
+        <ContentsBox>
+          <CommuContentsModal />
+        </ContentsBox>
+        <PaginateButton page={page} setPage={setPage} totalPages={totalPages} />
+      </CommunityBox>
+    </BigBox>
   );
 };
 
@@ -69,10 +78,24 @@ export default LikedCommuPage;
 
 const BigBox = styled.div`
   width: 100%;
-  height: 84vh;
+  height: 87.5vh;
   display: flex;
   justify-content: center;
+  align-items: center;
   font-family: ${font.normal};
+  margin-top: 10px;
+`;
+
+const CommunityBox = styled.div`
+  background-color: ${theme.backColor};
+  width: 60rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 30px;
+  box-shadow: 6px 6px 6px rgba(0, 0, 0, 0.3);
+  position: relative;
 `;
 
 const IntroBox = styled.div`
@@ -80,116 +103,86 @@ const IntroBox = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-top: 1rem;
-`;
-
-const CommunityBox = styled.div`
-  background-color: #f2f2f2;
-  width: 60rem;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  margin-top: 25px;
+  position: relative;
 `;
 
 const ImageBox = styled.div`
   border: solid 1px black;
   border-radius: 50%;
-  height: 8rem;
-  width: 8rem;
-  margin: 0rem 2.5rem;
+  height: 9rem;
+  width: 9rem;
+  margin-right: 15px;
+  margin-left: 5rem;
+  position: relative;
+  overflow: hidden;
+
+  img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const NameBox = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  width: 30rem;
+  width: 29rem;
   height: 75%;
+  margin-left: 10px;
 `;
 
 const CommuName = styled.div`
   display: flex;
   align-items: center;
-  width: 25rem;
+  width: 500px;
   height: 3rem;
   font-family: ${font.bold};
-  font-size: 1.3rem;
+  font-size: 22px;
   letter-spacing: 0.1rem;
 `;
 
 const CommuIntro = styled.div`
   display: flex;
-  align-items: center;
-  width: 30rem;
+  width: 500px;
   height: 4rem;
   font-family: ${font.normal};
-  font-size: 0.85rem;
-  line-height: 1.3rem;
+  font-size: 17px;
+  margin-top: 5px;
 `;
 
-const EditBtn = styled.button`
-  border: none;
-  width: 6rem;
-  height: 2rem;
-  margin-top: 1rem;
-  cursor: pointer;
-`;
-
-const BtnBox = styled.div`
+const WritingBtnBox = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 12.5rem;
-  margin-left: 1rem;
-`;
-
-const ChatBtn = styled.button`
-  position: relative;
-  width: 8rem;
-  height: 3rem;
-  border-radius: 10px;
-  border: none;
-  background-color: lightgray;
-
-  :after {
-    border-top: 0px solid transparent;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 10px solid lightgray;
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 5.5rem;
-  }
-`;
-
-const WriteBtn = styled.button`
-  width: 7rem;
-  height: 2rem;
-  margin-top: 1.2rem;
-  border: none;
-  cursor: pointer;
-  border-radius: 20px;
+  position: absolute;
+  bottom: 0;
+  right: 80px;
 `;
 
 const SmallBox = styled.div`
   height: 2rem;
-  width: 55rem;
+  width: 50rem;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
+  padding-right: 20px;
 `;
 
 const InfoBox = styled.div`
   height: 2rem;
-  width: 14rem;
+  width: 13rem;
   display: flex;
   flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
   div {
-    margin-left: 1rem;
+    margin-left: 10px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
   }
 `;
 
@@ -198,14 +191,5 @@ const ContentsBox = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 1rem;
-`;
-
-const PaginationBox = styled.div`
-  border: solid 1px black;
-  height: 2rem;
-  width: 35rem;
-  margin-top: 0.7rem;
-  position: absolute;
-  bottom: 2%;
+  margin: 1.5rem;
 `;

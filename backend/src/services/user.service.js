@@ -1,14 +1,19 @@
-import User from '../models/User.model.js';
+import { User } from '../models/User.model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 class userService {
-  static async addUser({ nickname, email, password }) {
+  static async addUser({ nickname, email, password, checkPassword }) {
     const user = await User.findOne({ where: { email: email } });
 
     if (user) {
       const errorMessage = '사용중인 이메일입니다.';
-      return { errorMessage };
+      return errorMessage;
+    }
+
+    if (password !== checkPassword) {
+      const errorMessage = '비밀번호가 일치하지 않습니다.';
+      return errorMessage;
     }
 
     // 비밀번호 해쉬화
@@ -20,9 +25,10 @@ class userService {
       email,
       password: hashedPassword,
     });
-    createdNewUser.errorMessage = null; // 문제 없이 db 저장 완료되었으므로 에러가 없음.
+    createdNewUser.errorMessage = null;
 
-    return createdNewUser;
+    // return createdNewUser;
+    return `Successfully create a user account`;
   }
 
   static async findUser({ email, password }) {
@@ -37,7 +43,7 @@ class userService {
       password,
       correctPasswordHash,
     );
-    console.log(isPasswordCorrect);
+
     if (!isPasswordCorrect) {
       const errorMessage =
         '비밀번호가 일치하지 않습니다. 다시 한 번 확인해 주세요.';
@@ -61,13 +67,17 @@ class userService {
 
     return loginUser;
   }
+
   static async users() {
-    const users = await User.findAll();
+    const users = await User.findAll({ attributes: { exclude: ['password'] } });
     return users;
   }
 
   static async getUser({ userId }) {
-    const user = await User.findOne({ where: { userId: userId } });
+    const user = await User.findOne({
+      where: { userId: userId },
+      attributes: { exclude: ['password', 'deletedAt'] },
+    });
 
     if (!user) {
       const errorMessage = '가입내역이 없습니다.';
@@ -80,21 +90,59 @@ class userService {
     const user = await User.findOne({ where: { userId: userId } });
 
     if (!user) {
-      const errorMessage = '가입 내역이 없습니다. 다시 한 번 확인해 주세요.';
+      const errorMessage = `Cannot find information`;
       return { errorMessage };
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const correctPasswordHash = user.password;
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      correctPasswordHash,
+    );
+    // const hashedPassword = await bcrypt.hash(password, 10);
+    if (!isPasswordCorrect) {
+      const errorMessage =
+        '비밀번호가 일치하지 않습니다. 다시 한 번 확인해 주세요.';
+      return { errorMessage };
+    }
 
     const updateUser = await User.update(
-      { nickname, password: hashedPassword },
+      { nickname },
       {
         where: {
           userId: user.userId,
         },
       },
     );
+
+    return {
+      id: user.id,
+      userId: user.userId,
+      email: user.email,
+      nickname: nickname,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      deletedAt: user.deletedAt,
+    };
+  }
+
+  static async updateImage({ profileImg, userId }) {
+    const user = await User.findOne({ where: { userId: userId } });
+    await User.update(
+      { profileImg: profileImg },
+      {
+        where: {
+          userId: user.userId,
+        },
+      },
+    );
+    return;
+  }
+  static async findUserId({ userId }) {
+    const user = await User.findOne({
+      where: { userId: userId },
+      attributes: { exclude: ['password'] },
+    });
     return user;
   }
 }
-
 export { userService };

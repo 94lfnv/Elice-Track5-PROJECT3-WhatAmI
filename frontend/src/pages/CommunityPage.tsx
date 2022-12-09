@@ -1,143 +1,173 @@
-import useModal from '../hooks/modal/useModal';
-import styled, { keyframes } from 'styled-components';
+import { useState, useEffect } from 'react';
+import styled from 'styled-components';
 import { font } from '../assets/styles/common/fonts';
 import CommuRankingCard from '../components/community/CommuRankingCard';
 import CommuListCard from '../components/community/CommuListCard';
-import MyModal from '../components/modal/MyModal';
-import CommunityMaker from '../components/community/CommunityMaker';
 import { SearchBox } from '../assets/styles/common/commonComponentStyle';
+import { theme } from '../assets/styles/common/palette';
+import MakingCommuModal from '../components/modal/MakingCommuModal';
+import {
+  getCommunitiesRequest,
+  getRankingCommunityRequest,
+} from '../apis/communityFetcher';
+import {
+  CommunityRankingType,
+  CommunityType,
+} from '../types/community/communityType';
+import { Link } from 'react-router-dom';
 
 const CommunityPage = () => {
-  const [isMakeOpen, handleMakeStateChange] = useModal();
+  const [rankings, setRankings] = useState<CommunityType[]>([]);
+  const [commuList, setCommuList] = useState<CommunityType[]>([]);
+  const [pages, setPages] = useState<number>(1);
+
+  // 베스트 커뮤니티
+  const getRankingCommunity = async () => {
+    const res = await getRankingCommunityRequest('communities/best');
+    const resMap = res.map((res: CommunityRankingType) => res.Community);
+    setRankings(resMap);
+  };
+
+  // 전체 커뮤니티 목록
+  const getCommunitiesList = async () => {
+    const res = await getCommunitiesRequest(`communities?page=${pages}`);
+
+    setCommuList(res.result.selectedCommunity);
+  };
+
+  useEffect(() => {
+    getRankingCommunity();
+    getCommunitiesList();
+  }, []);
 
   return (
-    <>
-      <MyModal
-        isOpen={isMakeOpen}
-        onModalStateChangeEvent={handleMakeStateChange}
-      >
-        <CommunityMaker />
-      </MyModal>
-      <CommuBox>
-        <Header>
-          다양한 댕댕이와 만나 보세요.
-          <MakeBtn onClick={handleMakeStateChange}>커뮤니티 만들기</MakeBtn>
-        </Header>
-        <CommuContainer>
-          <LeftBox>
-            <SearchBox style={{ marginTop: '2rem' }}>
-              <input></input>
+    <CommuBox>
+      <Header>
+        다양한 댕댕이와 만나 보세요.
+        <MakingCommuModal />
+      </Header>
+      <CommuContainer>
+        <PopularCommuBox>
+          <RankingHeader>인기 커뮤니티</RankingHeader>
+          <RankingBox>
+            {rankings?.map((ranking) => (
+              <CommuRankingCard key={ranking.id} ranking={ranking} />
+            ))}
+          </RankingBox>
+        </PopularCommuBox>
+        <ListsBox>
+          <CommuListHeader>
+            커뮤니티 목록
+            <SearchBox style={{ marginLeft: '20px', width: '20rem' }}>
+              <input type="text" placeholder="댕댕이 커뮤니티 찾아보기" />
               <button>검색</button>
             </SearchBox>
-            <RankingHeader>인기 커뮤니티</RankingHeader>
-            <RankingBox>
-              <CommuRankingCard />
-            </RankingBox>
-          </LeftBox>
-          <RightBox>
-            <CommuListHeader>커뮤니티 목록</CommuListHeader>
-            <CommuListsBox>
-              <CommuListCard />
-            </CommuListsBox>
-          </RightBox>
-        </CommuContainer>
-      </CommuBox>
-    </>
+          </CommuListHeader>
+          <CommuListsBox>
+            <ScrollBox>
+              {commuList?.map((commu) => (
+                <CommuListCard key={commu.id} commu={commu} />
+              ))}
+            </ScrollBox>
+          </CommuListsBox>
+        </ListsBox>
+      </CommuContainer>
+    </CommuBox>
   );
 };
 
 export default CommunityPage;
 
-const animation = keyframes`
-  50% {
-    transform: scale(1.05);
-  }
-`;
-
 const CommuBox = styled.div`
   width: 100%;
-  height: 80vh;
-  font-family: ${font.normal};
+  height: 87vh;
+  font-family: ${font.bold};
 `;
 
 const Header = styled.div`
-  font-size: 1.15rem;
+  font-size: 20px;
   display: flexbox;
   justify-content: center;
-  margin-top: 1.25rem;
+  align-items: center;
+  margin-top: 5vh;
   letter-spacing: 1px;
-`;
-
-const MakeBtn = styled.button`
-  margin-left: 2rem;
-  height: 2.7rem;
-  width: 10.3rem;
-  border: none;
-  outline: none;
-  border-radius: 50px;
-  cursor: pointer;
-  font-family: ${font.bold};
-  font-size: 0.93rem;
-  :hover {
-    animation-duration: 0.3s;
-    animation-timing-function: ease-in-out;
-    animation-name: ${animation};
-  }
 `;
 
 const CommuContainer = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
-  justify-content: space-evenly;
-  margin-top: 1.3rem;
 `;
 
-const LeftBox = styled.div`
+const PopularCommuBox = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
-
-// const SearchBox = styled.div`
-//   width: 23rem;
-//   height: 2rem;
-//   line-height: 2rem;
-//   border: solid 1px black;
-//   margin-top: 1.9rem;
-// `;
 
 const RankingHeader = styled.div`
   width: 23rem;
   height: 2rem;
   line-height: 2rem;
   text-align: center;
-  margin-top: 2.5rem;
+  margin-top: 3rem;
+  color: ${theme.mainColor};
+  font-size: 20px;
 `;
 
 const RankingBox = styled.div`
   display: flex;
   justify-content: center;
   justify-content: space-evenly;
-  margin-top: 0.7rem;
+  margin-top: 1.5rem;
 `;
 
-const RightBox = styled.div`
+const ListsBox = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-left: 5rem;
 `;
 
 const CommuListHeader = styled.div`
-  font-size: 1.15rem;
-  display: flexbox;
-  justify-content: center;
-  margin-top: 1.9rem;
+  width: 50rem;
+  height: 2rem;
+  line-height: 2rem;
+  text-align: center;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 3rem;
+  color: ${theme.mainColor};
+  font-size: 20px;
 `;
 
 const CommuListsBox = styled.div`
   height: 100%;
+  width: 51rem;
   display: flex;
   flex-direction: column;
-  margin-top: 0.8rem;
+  justify-content: center;
+  align-items: center;
+  /* align-items: flex-end; */
+  margin-top: 12px;
+`;
+
+const ScrollBox = styled.div`
+  border: solid 2px ${theme.mainColor};
+  border-radius: 10px;
+  width: 51rem;
+  height: 36rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1rem;
+
+  // 스크롤 조절
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  overflow-y: scroll;
+  ::-webkit-scrollbar {
+    display: none;
+  }
 `;

@@ -1,93 +1,88 @@
-import styled, { keyframes } from 'styled-components';
+import { Link } from 'react-router-dom';
+import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { EntryBtn } from '../../assets/styles/common/commonComponentStyle';
+import { theme } from '../../assets/styles/common/palette';
+import LikeBtn from '../common/LikeBtn';
+import { CommunityType } from '../../types/community/communityType';
+import { font } from '../../assets/styles/common/fonts';
 
-const CommuListCard = () => {
+export interface CommunityListsTypeProps {
+  commu: CommunityType;
+}
+
+const CommuListCard = ({ commu }: CommunityListsTypeProps) => {
   const navigate = useNavigate();
 
   return (
-    <>
-      <ListCardBox>
-        <ListImage></ListImage>
-        <SmallBox>
-          <CommuName>댕댕이를 사랑하는 서울 시민들의 모임</CommuName>
-          <CommuNum>💙30</CommuNum>
-        </SmallBox>
-        <EntryBtn onClick={() => navigate('/likedcommunity')}>
-          입장하기
-        </EntryBtn>
-        <CheckBtn>💙</CheckBtn>
-      </ListCardBox>
-    </>
+    <ListCardBox>
+      <ListImage>
+        <img src={commu.communityImage} />
+      </ListImage>
+      <SmallBox>
+        <CommuName>{commu.name}</CommuName>
+        <LikeNum>
+          <LikeBtn />
+        </LikeNum>
+      </SmallBox>
+      <Link to={`/likedcommunity?id=${commu.id}`}>
+        <EntryBtn>입장하기</EntryBtn>
+      </Link>
+    </ListCardBox>
   );
 };
 
 export default CommuListCard;
 
-const popup = keyframes`
-  from {
-    transform: translateY(0.3rem);
-  }
-  to {
-    transform: translateY(0rem);
-  }
-`;
-
 const ListCardBox = styled.div`
   width: 42rem;
-  height: 8rem;
-  border: solid 1px black;
+  height: 9rem;
+  min-height: 9rem;
+  background-color: ${theme.backColor};
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.2);
   border-radius: 20px;
-  margin-top: 1.5rem;
+  margin-top: 20px;
   display: flex;
   align-items: center;
-  :hover {
-    animation-duration: 0.25s;
-    animation-timing-function: ease-in-out;
-    animation-name: ${popup};
-    animation-fill-mode: forwards;
-  }
 `;
 
 const ListImage = styled.div`
-  width: 6.7rem;
-  height: 6.3rem;
+  width: 7.5rem;
+  height: 7rem;
   border: solid 1px gray;
-  margin-left: 2rem;
+  margin-left: 40px;
   border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+
+  img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const SmallBox = styled.div`
   display: flex;
   flex-direction: column;
-  margin-left: 1.2rem;
+  justify-content: center;
+  margin-left: 20px;
+  width: 300px;
+  height: 70%;
 `;
 
 const CommuName = styled.div`
-  width: 19rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  font-size: 16px;
+  font-family: ${font.normal};
 `;
 
-const CommuNum = styled.div`
-  width: 15rem;
-  height: 2rem;
+const LikeNum = styled.div`
+  width: 100%;
+  height: 1.5rem;
   display: flex;
   align-items: center;
-`;
-
-const EntryBtn = styled.button`
-  width: 8rem;
-  height: 2.7rem;
-  margin-left: 0.5rem;
-  cursor: pointer;
-`;
-
-const CheckBtn = styled.div`
-  width: 2rem;
-  height: 3rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 1rem;
+  margin-top: 5px;
 `;

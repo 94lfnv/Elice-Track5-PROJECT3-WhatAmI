@@ -1,15 +1,16 @@
 import sequelize from '../config/sequelize';
 import Sequelize from 'sequelize';
 
-import User from './User.model';
-import Review from './Review.model.js';
-import RevComment from './RevComment.model.js';
+import { User } from './User.model';
+import { Session } from './Session.model';
+import { Review } from './Review.model.js';
+import { ReviewComment } from './ReviewComment.model.js';
 
-import Like from './Like.model';
-import Community from './Community.model';
-import CommunityPost from './CommunityPost.model';
-import CommunityImage from './CommunityImage.model';
-import CommunityComment from './CommunityComment.model';
+import { ReviewLike } from './ReviewLike.model';
+import { Community } from './Community.model';
+import { CommunityPost } from './CommunityPost.model';
+import { CommunityComment } from './CommunityComment.model';
+import { CommunityLike } from './CommunityLike.model';
 
 const db = {};
 
@@ -18,16 +19,30 @@ db.sequelize = sequelize;
 
 db.User = User;
 db.Review = Review;
-db.Like = Like;
-db.RevComment = RevComment;
+db.ReviewLike = ReviewLike;
+db.ReviewComment = ReviewComment;
+db.Community = Community;
+db.CommunityPost = CommunityPost;
+db.CommunityComment = CommunityComment;
+db.CommunityLike = CommunityLike;
 
 User.init(sequelize);
+Session.init(sequelize);
 Review.init(sequelize);
-Like.init(sequelize);
-RevComment.init(sequelize);
+ReviewLike.init(sequelize);
+ReviewComment.init(sequelize);
+Community.init(sequelize);
+CommunityPost.init(sequelize);
+CommunityComment.init(sequelize);
+CommunityLike.init(sequelize);
 
+Community.associate(db);
+CommunityPost.associate(db);
+CommunityComment.associate(db);
 User.associate(db);
+CommunityLike.associate(db);
 Review.associate(db);
-RevComment.associate(db);
+ReviewComment.associate(db);
+ReviewLike.associate(db);
 
-export { db, Community, CommunityPost, CommunityImage, CommunityComment };
+export { db };

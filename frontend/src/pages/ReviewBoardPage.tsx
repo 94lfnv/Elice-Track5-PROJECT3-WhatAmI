@@ -1,98 +1,109 @@
-import styled, { keyframes } from 'styled-components';
-import useModal from '../hooks/modal/useModal';
-import PuppyCard from '../components/reviewBoard/PuppyCard';
+import styled from 'styled-components';
 import { font } from '../assets/styles/common/fonts';
 import { SearchBox } from '../assets/styles/common/commonComponentStyle';
-import MyModal from '../components/modal/MyModal';
-import WritingEditor from '../components/reviewBoard/WritingEditor';
-import ContentsViewer from '../components/reviewBoard/ContentsViewer';
+import ReviewCreateModal from '../components/modal/ReviewWritingModal';
+import { theme } from '../assets/styles/common/palette';
+import { useEffect, useState } from 'react';
+import { getReviewRequest } from '../apis/reviewFetcher';
+import ReviewContentsModal from '../components/modal/ReviewContentsModal';
+import usePaginate from '../hooks/usePaginate/usePaginate';
+import { ReviewType } from '../types/reviewboard/reviewType';
+import { getUserData } from '../apis/mypageFetcher';
 
 const ReviewBoardPage = () => {
-  const [isCreateOpen, handleCreateStateChange] = useModal();
-  const [isContentsOpen, handleContentsModalStateChange] = useModal();
+  const [pages, setPages] = useState<number>(1);
+  const [reviews, setReviews] = useState<ReviewType[]>([]);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [currentUser, setCurrentUser] = useState<string>('');
+  const [isLogin, setIsLogin] = useState<boolean>(false);
+
+  const { isFirst, isLast, handleNextBtnClick, handlePrevBtnClick } =
+    usePaginate(pages, setPages, totalPages, 1);
+
+  // 현재 로그인 중인 유저 닉네임 받기
+  const getCurrentUser = async () => {
+    const res = await getUserData();
+    setCurrentUser(res.userId);
+  };
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
+
+  // 로그인 상태인지 아닌지 체크
+  // const checkLogin = () => {
+  //   if (currentUser !== '') {
+  //     setIsLogin(true);
+  //   }
+  // };
+  // useEffect(() => {
+  //   checkLogin();
+  // }, [currentUser]);
+
+  // 리뷰 게시판 전체 리뷰 받기
+  const getReviews = async () => {
+    const res = await getReviewRequest(`reviews?page=${pages}`);
+
+    setReviews(res.result.selectedReviews);
+    setTotalPages(res.result.reviewCount);
+  };
+  useEffect(() => {
+    getReviews();
+  }, [handleNextBtnClick, handlePrevBtnClick, setReviews]);
 
   return (
-    <>
-      <MyModal
-        isOpen={isCreateOpen}
-        onModalStateChangeEvent={handleCreateStateChange}
-      >
-        <WritingEditor />
-      </MyModal>
-      <MyModal
-        isOpen={isContentsOpen}
-        onModalStateChangeEvent={handleContentsModalStateChange}
-      >
-        <ContentsViewer />
-      </MyModal>
-      <BoardBox>
-        <BoardHeader>
-          사람들과 AI 분석 결과를 공유해보세요.
-          <CreateBtn onClick={handleCreateStateChange}>글쓰기</CreateBtn>
-        </BoardHeader>
-        <BoardContent>
-          <SlideLeftBtn />
-          <CardBox>
-            <PuppyCard
-              onCardModalClickEvent={handleContentsModalStateChange}
-            ></PuppyCard>
-          </CardBox>
-          <SlideRightBtn />
-          <SearchBox style={{ position: 'absolute', bottom: '5%' }}>
-            <input></input>
-            <button>검색</button>
-          </SearchBox>
-        </BoardContent>
-      </BoardBox>
-    </>
+    <BoardBox>
+      <BoardHeader>
+        사람들과 AI 분석 결과를 공유해보세요.
+        <ReviewCreateModal />
+      </BoardHeader>
+      <BoardContent>
+        <SlideLeftBtn disabled={isFirst} onClick={handlePrevBtnClick} />
+        <CardBox>
+          {reviews?.map((review, idx) => (
+            <ReviewContentsModal
+              key={idx}
+              review={review}
+              getReviews={getReviews}
+              currentUser={currentUser}
+            />
+          ))}
+        </CardBox>
+        <SlideRightBtn disabled={isLast} onClick={handleNextBtnClick} />
+      </BoardContent>
+      <SearchBox style={{ marginTop: '7vh' }}>
+        <input></input>
+        <button>검색</button>
+      </SearchBox>
+    </BoardBox>
   );
 };
 
 export default ReviewBoardPage;
 
-const animation = keyframes`
-  50% {
-    transform: scale(1.05);
-  }
-`;
-
 const BoardBox = styled.div`
   width: 100%;
-  height: 80vh;
-  font-family: ${font.normal};
+  height: 85vh;
+  font-family: ${font.bold};
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 const BoardHeader = styled.div`
-  font-size: 1.15rem;
+  font-size: 20px;
   display: flexbox;
   justify-content: center;
-  margin-top: 2rem;
+  margin-top: 8vh;
   letter-spacing: 1px;
-`;
-
-const CreateBtn = styled.button`
-  margin-left: 2rem;
-  height: 2.5rem;
-  width: 7rem;
-  border: none;
-  outline: non1e;
-  border-radius: 50px;
-  cursor: pointer;
-  font-family: ${font.bold};
-  font-size: 1rem;
-  :hover {
-    animation-duration: 0.3s;
-    animation-timing-function: ease-in-out;
-    animation-name: ${animation};
-  }
 `;
 
 const BoardContent = styled.div`
   display: flexbox;
   justify-content: center;
-  justify-content: space-evenly;
   align-items: center;
-  margin-top: 4rem;
+  height: 30rem;
+  margin-top: 5vh;
 `;
 
 const CardBox = styled.div`
@@ -100,25 +111,61 @@ const CardBox = styled.div`
   justify-content: center;
   justify-content: space-evenly;
   flex-wrap: wrap;
-  width: 73rem;
+  width: 70rem;
   min-width: 70rem;
-  height: 100%;
+  min-height: 27rem;
 `;
 
-const SlideRightBtn = styled.div`
-  width: 0;
-  height: 0;
-  border-bottom: 1.5rem solid transparent;
-  border-top: 1.5rem solid transparent;
-  border-left: 1.5rem solid lightgray;
-  border-right: 1.5rem solid transparent;
-`;
-
-const SlideLeftBtn = styled.div`
+const SlideLeftBtn = styled.button`
+  background: 0;
   width: 0;
   height: 0;
   border-bottom: 1.5rem solid transparent;
   border-top: 1.5rem solid transparent;
   border-left: 1.5rem solid transparent;
   border-right: 1.5rem solid lightgray;
+
+  :hover {
+    border-bottom: 1.5rem solid transparent;
+    border-top: 1.5rem solid transparent;
+    border-left: 1.5rem solid transparent;
+    border-right: 1.5rem solid ${theme.pointColor};
+    cursor: pointer;
+  }
+
+  &[disabled] {
+    border-bottom: 1.5rem solid transparent;
+    border-top: 1.5rem solid transparent;
+    border-left: 1.5rem solid transparent;
+    border-right: 1.5rem solid lightgray;
+    cursor: revert;
+    transform: revert;
+  }
+`;
+
+const SlideRightBtn = styled.button`
+  background: 0;
+  width: 0;
+  height: 0;
+  border-bottom: 1.5rem solid transparent;
+  border-top: 1.5rem solid transparent;
+  border-left: 1.5rem solid lightgray;
+  border-right: 1.5rem solid transparent;
+
+  :hover {
+    border-bottom: 1.5rem solid transparent;
+    border-top: 1.5rem solid transparent;
+    border-left: 1.5rem solid ${theme.pointColor};
+    border-right: 1.5rem solid transparent;
+    cursor: pointer;
+  }
+
+  &[disabled] {
+    border-bottom: 1.5rem solid transparent;
+    border-top: 1.5rem solid transparent;
+    border-left: 1.5rem solid lightgray;
+    border-right: 1.5rem solid transparent;
+    cursor: revert;
+    transform: revert;
+  }
 `;

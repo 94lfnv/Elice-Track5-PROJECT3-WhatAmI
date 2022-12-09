@@ -1,12 +1,24 @@
 import { Sequelize, DataTypes } from 'sequelize';
 
-module.exports = class Review extends Sequelize.Model {
+class Review extends Sequelize.Model {
   static init(sequelize) {
     return super.init(
       {
+        id: {
+          allowNull: false,
+          autoIncrement: true,
+          primaryKey: true,
+          foreignKey: true,
+          type: DataTypes.INTEGER,
+        },
         description: {
           type: DataTypes.STRING(500),
           allowNull: false,
+        },
+        userId: {
+          type: DataTypes.UUID,
+          defaultValue: DataTypes.UUIDV4,
+          foreignKey: true,
         },
         images: {
           type: DataTypes.TEXT,
@@ -25,16 +37,18 @@ module.exports = class Review extends Sequelize.Model {
   static associate(db) {
     db.Review.belongsTo(db.User, {
       foreignKey: 'userId',
-      sourceKey: 'userId',
-      onDelete: 'cascade',
-      onUpdate: 'cascade',
+      targetKey: 'userId',
     });
 
-    db.Review.hasMany(db.RevComment, {
+    db.Review.hasMany(db.ReviewComment, {
       foreignKey: 'reviewId',
-      sourcekey: 'id',
-      onDelete: 'cascade',
-      onUpdate: 'cascade',
+      targetKey: 'id',
+    });
+    db.Review.hasMany(db.ReviewLike, {
+      foreignKey: 'reviewId',
+      targetKey: 'id',
     });
   }
-};
+}
+
+export { Review };

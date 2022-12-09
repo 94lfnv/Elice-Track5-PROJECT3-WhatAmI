@@ -1,0 +1,24 @@
+{
+    "data": [
+        {
+            "id": 1,
+            "img": "/img/pepsi.jpg",
+            "title": "펩시를 사랑하는 모임"
+        },
+        {
+            "id": 2,
+            "img": "/img/potato.png",
+            "title": "감자를 사랑하는 모임"
+        },
+        {
+            "id": 3,
+            "img": "/img/강아지1.jpg",
+            "title": "일산 강아지 모임"
+        },
+        {
+            "id": 4,
+            "img": "/img/cogi.jpg",
+            "title": "코기를 사랑하는 모임"
+        }
+    ]
+}

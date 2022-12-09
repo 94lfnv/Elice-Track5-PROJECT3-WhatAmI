@@ -2,38 +2,30 @@ import { userService } from '../services/user.service.js';
 import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import Joi from 'joi';
-
-const postUserValidation = Joi.object({
-  nickname: Joi.string().required(),
-  email: Joi.string().email().required(),
-  password: Joi.string().required(),
-  // confirmPassword: Joi.string().required(),
-});
+import { registerValidator } from '../middlewares/userValidator';
 
 class userController {
-  static async register(req, res) {
+  static async register(req, res, next) {
     try {
-      // const { nickname, email, password } = req.body;
-      const { nickname, email, password } =
-        await postUserValidation.validateAsync(req.body);
+      const { nickname, email, password, checkPassword } =
+        await registerValidator.validateAsync(req.body);
 
       const newUser = await userService.addUser({
-        nickname,
-        email,
-        password,
+        nickname: nickname,
+        email: email,
+        password: password,
+        checkPassword: checkPassword,
       });
 
       if (newUser.errorMessage) {
         throw new Error(newUser, errorMessage);
       }
-      res.status(201).json(newUser);
+      return res.status(201).json(newUser);
     } catch (error) {
-      return res.status(400).send({
-        errorMessage: '요청한 데이터 형식이 올바르지 않습니다.',
-      });
+      next(error);
     }
   }
-  static async login(req, res) {
+  static async login(req, res, next) {
     try {
       const { email, password } = req.body;
 
@@ -41,25 +33,25 @@ class userController {
       if (user.errorMessage) {
         throw new Error(user.errorMessage);
       }
-      res.status(201).send(user);
-    } catch (error) {
-      console.log();
-      return res.status(400).json({ code: 400, message: error.message });
-    }
-  }
-  static async userList(req, res) {
-    try {
-      const users = await userService.users();
-      if (users.errorMessage) {
-        throw new Error(users.errorMessage);
-      }
-      res.status(200).send(users);
+      return res.status(201).send(user);
     } catch (error) {
       next(error);
     }
   }
 
-  static async current(req, res) {
+  static async userList(req, res, next) {
+    try {
+      const users = await userService.users();
+      // if (users.errorMessage) {
+      //   throw new Error(users.errorMessage);
+      // }
+      return res.status(200).send(users);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async current(req, res, next) {
     try {
       // jwt 이용 id로 사용자 찾기
       const userId = req.currentUserId;
@@ -69,17 +61,15 @@ class userController {
       if (user.errorMessage) {
         throw new Error(user.errorMessage);
       }
-      res.status(200).send(user);
+      return res.status(200).send(user);
     } catch (error) {
-      return res.status(400).json({ code: 400, message: error.message });
+      next(error);
     }
   }
 
   static async edit(req, res, next) {
     try {
-      // const userId = req.currentUserId,
       const userId = req.params.userId;
-      console.log(userId);
 
       // 수정할 사용자 정보
       const { nickname, password } = req.body ?? null;
@@ -94,7 +84,42 @@ class userController {
         throw new Error(updatedUser.errorMessage);
       }
 
-      res.status(200).json(updatedUser);
+      return res.status(200).json(updatedUser);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async setImage(req, res, next) {
+    try {
+      const userId = req.params.userId;
+      const profileImg = req.file.location;
+      if (req.file === undefined) {
+        res
+          .status(400)
+          .send({ success: false, message: '이미지가 존재하지 않습니다.' });
+      }
+      await userService.updateImage({
+        profileImg,
+        userId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: '이미지가 저장되었습니다.',
+        userId,
+        profileImg,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async select(req, res, next) {
+    try {
+      const userId = req.params.userId;
+      const findUser = await userService.findUserId({ userId });
+      return res.status(200).send(findUser);
     } catch (error) {
       next(error);
     }

@@ -10,6 +10,13 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     dialect: 'mysql',
+    timezone: '+09:00',
+    dialectOptions: {
+      charset: 'utf8mb4',
+      dateStrings: true,
+      typeCast: true,
+      timezone: '+09:00',
+    },
   },
 );
 

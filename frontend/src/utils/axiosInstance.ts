@@ -1,17 +1,22 @@
 import axios from 'axios';
+import Storage from '../storage/storage';
 
-// TODO: env
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-const axiosInstance = axios.create({
-  baseURL: '여기는 기본 URL자리',
+export const axiosInstance = axios.create({
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    Authorization: `Bearer ${Storage.getTokenItem()}`,
   },
   timeout: 3000,
 });
 
 axiosInstance.interceptors.request.use(
   (req) => {
+    // req.headers = {
+    //   'Autorization' : `Bearer ${sessionStorage.getItem('userToken')}`
+    // }
     return req;
   },
   (error) => {

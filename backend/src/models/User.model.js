@@ -1,13 +1,21 @@
 import { Sequelize, DataTypes } from 'sequelize';
 
-module.exports = class User extends Sequelize.Model {
+class User extends Sequelize.Model {
   static init(sequelize) {
     return super.init(
       {
+        id: {
+          allowNull: false,
+          autoIncrement: true,
+          primaryKey: true,
+          type: DataTypes.INTEGER,
+        },
         userId: {
           type: DataTypes.UUID,
           defaultValue: DataTypes.UUIDV4,
+          foreignKey: true,
           unique: true,
+          allowNull: false,
         },
         email: {
           type: DataTypes.STRING(40),
@@ -51,19 +59,40 @@ module.exports = class User extends Sequelize.Model {
         tableName: 'users',
         charset: 'utf8mb4',
         collate: 'utf8mb4_general_ci',
+        paranoid: true,
       },
     );
   }
   static associate(db) {
-    // db.User.hasMany(db.Like, {
-    //   foreignKey: 'userId',
-    //   sourceKey: 'userId',
-    // });
-    db.User.hasMany(db.Review, {
+    db.User.hasMany(db.Community, {
       foreignKey: 'userId',
       sourceKey: 'userId',
-      onDelete: 'cascade',
-      onUpdate: 'cascade',
+    }),
+      db.User.hasMany(db.CommunityPost, {
+        foreignKey: 'userId',
+        sourceKey: 'userId',
+      }),
+      db.User.hasMany(db.CommunityComment, {
+        foreignKey: 'userId',
+        sourceKey: 'userId',
+      }),
+      db.User.hasMany(db.CommunityLike, {
+        foreignKey: 'userId',
+        sourceKey: 'userId',
+      }),
+      db.User.hasMany(db.Review, {
+        foreignKey: 'userId',
+        sourceKey: 'userId',
+      }),
+      db.User.hasMany(db.ReviewComment, {
+        foreignKey: 'userId',
+        sourceKey: 'userId',
+      });
+    db.User.hasMany(db.ReviewLike, {
+      foreignKey: 'userId',
+      sourceKey: 'userId',
     });
   }
-};
+}
+
+export { User };

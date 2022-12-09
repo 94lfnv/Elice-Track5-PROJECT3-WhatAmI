@@ -1,40 +1,110 @@
-import { revCommentService } from '../services/revComment.service';
+import { reviewCommentService } from '../services/revComment.service';
 // import Joi from 'joi';
 
-const revCommentController = {
-  reviewComments: async (req, res) => {
+class reviewCommentController {
+  static async newReviewComments(req, res, next) {
     try {
+      const userId = req.currentUserId;
       const reviewId = req.params.reviewId;
       const { description } = req.body;
 
-      const revComment = await revCommentService.addRevComment({
+      const reviewComment = await reviewCommentService.addReviewComment({
         description,
         reviewId,
+        userId,
       });
-      if (revComment.errorMessage) {
-        throw new Error(revComment, errorMessage);
+
+      if (reviewComment.errorMessage) {
+        throw new Error(reviewComment);
       }
-      res.status(201).json(revComment);
+      return res.status(201).json(reviewComment);
     } catch (error) {
-      return res.status(400).json({ code: 400, message: error.message });
+      next(error);
     }
-  },
-  showComments: async (req, res) => {
+  }
+
+  static async showReviewComments(req, res, next) {
     try {
       const _reviewId = req.params.reviewId;
-      console.log(_reviewId);
 
-      const revComment = await revCommentService.showAllRevComments({
+      const reviewComments = await reviewCommentService.showAllReviewComments({
         _reviewId,
       });
-      if (revComment.errorMessage) {
-        throw new Error(revComment, errorMessage);
+      if (reviewComments.errorMessage) {
+        throw new Error(reviewComments);
       }
-      res.status(201).json(revComment);
+      return res.status(200).json(reviewComments);
     } catch (error) {
-      return res.status(400).json({ code: 400, message: error.message });
+      next(error);
     }
-  },
-};
+  }
 
-export { revCommentController };
+  static async showOneReviewComments(req, res, next) {
+    try {
+      const userId = req.currentUserId;
+      const reviewId = req.params.reviewId;
+
+      const id = req.params.reviewCommentId;
+
+      const oneReviewComment = await reviewCommentService.showOneReviewComments(
+        {
+          id,
+          reviewId,
+        },
+      );
+      if (oneReviewComment.errorMessage) {
+        throw new Error(oneReviewComment);
+      }
+      return res.status(200).json(oneReviewComment);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateComment(req, res, next) {
+    try {
+      const userId = req.currentUserId;
+      const id = req.params.reviewCommentId;
+      const { description } = req.body;
+
+      const reviewComment = await reviewCommentService.updateComment({
+        description,
+        id,
+        userId,
+      });
+
+      if (reviewComment.errorMessage) {
+        throw new Error(reviewComment);
+      }
+
+      const message = await reviewCommentService.findMessage({
+        id,
+        userId,
+      });
+      return res.status(200).json(message);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteComment(req, res, next) {
+    try {
+      const userId = req.currentUserId;
+
+      const id = req.params.reviewCommentId;
+
+      const deleteComment = await reviewCommentService.deleteComment({
+        id,
+        userId,
+      });
+      if (deleteComment.errorMessage) {
+        throw new Error(deleteComment);
+      }
+      return res.status(200).json(deleteComment);
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+export { reviewCommentController };
