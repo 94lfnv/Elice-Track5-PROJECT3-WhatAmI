@@ -1,55 +1,54 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { createCommuRequest } from '../../apis/communityFetcher';
+import { createCommunityRequest } from '../../apis/communityFetcher';
 import { font } from '../../assets/styles/common/fonts';
 import { theme } from '../../assets/styles/common/palette';
 
-// TODO: 커뮤 이름, 소개글 안 적으면 버튼 비활성화
-// 일단 alert으로 일러주기
-
 const CommunityMaker = () => {
-  const [communityImage, setCommunityImage] = useState<
-    string | ArrayBuffer | null
-  >(`${import.meta.env.VITE_PUBLIC_URL}/img/default_image3.png`);
+  const [communityImage, setCommunityImage] = useState<File | null>(null);
   const [name, setName] = useState<string>('');
   const [introduction, setIntroduction] = useState<string>('');
+  const [preview, setPreview] = useState<string>('');
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const imageRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   // 사진 미리보기
   const handleChangeFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const file = e.target.files[0];
+      setCommunityImage(file);
       const reader = new FileReader();
       reader.readAsDataURL(file);
 
       reader.onload = () => {
-        setCommunityImage(reader.result);
+        setPreview(reader.result as string);
       };
     }
   };
 
   const handleDeletePreviewFile = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (imageRef.current) {
-      imageRef.current.value = '';
-      setCommunityImage(
-        `${import.meta.env.VITE_PUBLIC_URL}/img/default_image3.png`,
-      );
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+      setPreview('');
     }
   };
 
+  // 커뮤니티 만들기
   const handleCreateCommuFormClick = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createCommuRequest('community', {
-      name,
-      communityImage,
-      introduction,
-    });
-    // console.log(res.data);
-    // navigate('/likedcommunity');
+    if (communityImage) {
+      const res = await createCommunityRequest({
+        name,
+        communityImage,
+        introduction,
+      });
+      navigate(`/likedcommunity?id=${res.id}`);
+    } else {
+      alert('커뮤니티 대표 이미지를 넣어 주세요.');
+    }
   };
 
   return (
@@ -63,16 +62,14 @@ const CommunityMaker = () => {
               <button onClick={handleDeletePreviewFile}>삭제</button>
             </div>
             <input
-              ref={imageRef}
+              ref={imageInputRef}
               type="file"
               accept="image/*"
               onChange={handleChangeFile}
             />
           </ImageTextBox>
           <RoundImage>
-            {communityImage && (
-              <img src={communityImage.toString()} className="pre-img" />
-            )}
+            {preview && <img src={preview} className="pre-img" />}
           </RoundImage>
         </AddImage>
         <AddName>
@@ -92,7 +89,12 @@ const CommunityMaker = () => {
         </AddIntro>
       </ModalContent>
       <ModalBottom>
-        <button type="submit">완료</button>
+        <button
+          type="submit"
+          disabled={name.length === 0 || introduction.length === 0}
+        >
+          완료
+        </button>
       </ModalBottom>
     </CommuMakeModalWrapper>
   );
@@ -166,7 +168,6 @@ const RoundImage = styled.div`
   width: 8rem;
   border: solid 1px black;
   border-radius: 50%;
-  margin-left: 0.5rem;
   position: relative;
   overflow: hidden;
 
@@ -234,5 +235,10 @@ const ModalBottom = styled.div`
     border-radius: 20px;
     font-family: ${font.bold};
     font-size: 16px;
+
+    &[disabled] {
+      background: rgba(45, 152, 218, 0.3);
+      cursor: revert;
+    }
   }
 `;

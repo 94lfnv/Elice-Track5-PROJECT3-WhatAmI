@@ -1,26 +1,21 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import { EditUserImg } from '../apis/mypageFetcher';
 import { font } from '../assets/styles/common/fonts';
 import { theme } from '../assets/styles/common/palette';
 
 const AITestPage = () => {
-  const [communityImage, setCommunityImage] = useState<
-    string | ArrayBuffer | null
-  >('');
-  const imageRef = useRef<HTMLInputElement>(null);
+  const [dogName, setDogName] = useState<string>('');
+  const [preview, setPreview] = useState<string>('');
+  const [aiImage, setAiImage] = useState<File>();
 
-  const navigate = useNavigate();
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const handleChangeFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onload = () => {
-        setCommunityImage(reader.result);
-      };
+  const handleChangeFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length !== 0) {
+      setPreview(URL.createObjectURL(e.target.files[0]));
+      setAiImage(e.target.files[0]);
     }
   };
 
@@ -32,9 +27,7 @@ const AITestPage = () => {
       <InnerBox>
         <ImageBigBox>
           <ImageBox>
-            {communityImage && (
-              <img src={communityImage.toString()} className="pre-img" />
-            )}
+            {preview && <img src={preview} className="pre-img" />}
           </ImageBox>
           <InputBox>
             <div className="filebox">
@@ -42,25 +35,28 @@ const AITestPage = () => {
                 <label htmlFor="file">사진 업로드</label>
               </div>
               <input
-                className="upload-name"
-                value="김댕댕 사진"
-                placeholder="김댕댕 사진"
-              />
-              <input
                 type="file"
                 id="file"
-                ref={imageRef}
+                ref={imageInputRef}
                 accept="image/*"
                 onChange={handleChangeFile}
               />
               <div style={{ marginTop: '15px', fontSize: '18px' }}>
                 강아지 이름
               </div>
-              <input type="text" className="puppy-name" placeholder="김댕댕" />
+              <input
+                type="text"
+                className="puppy-name"
+                placeholder="임펩시"
+                onChange={(e: any) => setDogName(e.target.value)}
+              />
             </div>
-            <TestBtn onClick={() => navigate('/dnaresult')}>
-              AI로 종 분석하기
-            </TestBtn>
+            <Link
+              to={'/ailoading'}
+              state={{ dogName: dogName, aiImage: aiImage }}
+            >
+              <TestBtn>AI로 종 분석하기</TestBtn>
+            </Link>
           </InputBox>
         </ImageBigBox>
       </InnerBox>
@@ -89,7 +85,7 @@ const AiTestBox = styled.div`
   border-radius: 20px;
   font-family: ${font.bold};
   color: ${theme.boldColor};
-  background-color: #fffcf1;
+  background-color: ${theme.lightColor};
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
@@ -173,7 +169,7 @@ const InputBox = styled.div`
 
 const TestBtn = styled.button`
   font-family: ${font.bold};
-  border: 0;
+  border: solid 1px ${theme.boldColor};
   width: 245px;
   height: 65px;
   border-radius: 10px;

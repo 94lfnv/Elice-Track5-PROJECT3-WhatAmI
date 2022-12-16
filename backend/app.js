@@ -8,15 +8,21 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import sessionMysql from 'express-mysql-session';
 
-//**Passport */
-import passport from 'passport';
-
 //**Router */
 import { communityRouter } from './src/routes/community.route';
+import { communityPostRouter } from './src/routes/communityPost.route';
+import { communityCommentRouter } from './src/routes/communityComment.route';
+import { communityPostLikeRouter } from './src/routes/communityPostLike.route';
+
 import { userRouter } from './src/routes/user.router';
 import { reviewRouter } from './src/routes/review.route';
-import { reviewCommentRouter } from './src/routes/revComment.route';
+import { reviewCommentRouter } from './src/routes/reviewComment.route';
+import { reviewLikeRouter } from './src/routes/reviewLike.route.js';
+
 import { myPageRouter } from './src/routes/myPage.route';
+import { communityLikeRouter } from './src/routes/communityLike.route';
+import { aiSearchResultRouter } from './src/routes/aiSearchResult.route';
+
 //**middleware */
 import errorMiddleware from './src/middlewares/error';
 
@@ -27,22 +33,52 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({ origin: '*', credentials: true }));
-app.use(cookieParser(process.env.COOKIE_SECRET));
+// app.use(cookieParser(process.env.COOKIE_SECRET));
 
-import passportConfig from './src/utils/passport.js';
+// import passportConfig from './src/utils/passport.js';
 
-app.use(passport.initialize());
-passportConfig();
+// app.use(passport.initialize());
+// passportConfig();
 
-// sequelize.sync({ force: false });
+// const MySqlStore = sessionMysql(session);
+// const options = {
+//   host: process.env.DB_HOST,
+//   port: process.env.DB_PORT,
+//   user: process.env.DB_USER_NAME,
+//   password: process.env.DB_USER_PASSWORD,
+//   database: process.env.DB_NAME,
+//   clearExpired: true,
+//   checkExpirationInterval: 10000,
+//   expiration: 10000,
+// };
+
+// const sessionStore = new MySqlStore(options);
+
+// app.use(
+//   session({
+//     secret: process.env.COOKIE_SECRET,
+//     resave: false,
+//     saveUninitialized: true,
+//     store: sessionStore,
+//   }),
+// );
+
+sequelize.sync({ force: false });
 
 app.use(userRouter);
-// app.use(communityRouter);
-// app.use(communityPostRouter);
+app.use(communityPostRouter);
 app.use(reviewRouter);
 app.use(reviewCommentRouter);
-app.use('/communities', communityRouter);
+app.use(reviewLikeRouter);
+
+app.use(communityRouter);
 app.use(myPageRouter);
+app.use(communityLikeRouter);
+app.use(communityCommentRouter);
+app.use(communityPostLikeRouter);
+
+app.use(aiSearchResultRouter);
+
 app.use(errorMiddleware);
 
 app.listen(process.env.SEVER_PORT, () =>

@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { font } from '../assets/styles/common/fonts';
 import CommuRankingCard from '../components/community/CommuRankingCard';
@@ -5,8 +6,72 @@ import CommuListCard from '../components/community/CommuListCard';
 import { SearchBox } from '../assets/styles/common/commonComponentStyle';
 import { theme } from '../assets/styles/common/palette';
 import MakingCommuModal from '../components/modal/MakingCommuModal';
+import {
+  getCommunitiesRequest,
+  getRankingCommunityRequest,
+} from '../apis/communityFetcher';
+import {
+  CommunityRankingType,
+  CommunityType,
+} from '../types/community/communityType';
+import { useInView } from 'react-intersection-observer';
+import { CommuSpinner } from '../components/loader/CustomSpinner';
+import Storage from '../storage/storage';
 
 const CommunityPage = () => {
+  const [rankings, setRankings] = useState<CommunityType[]>([]);
+  const [commuList, setCommuList] = useState<CommunityType[]>([]);
+  const [pages, setPages] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [ref, inView] = useInView();
+
+  // 무한 스크롤
+  const handleScroll = useCallback(async () => {
+    setLoading(true);
+    await getCommunitiesRequest(pages).then((res) => {
+      setCommuList((prevList) => [...prevList, ...res.selectedCommunity]);
+    });
+    setLoading(false);
+  }, [pages]);
+
+  useEffect(() => {
+    handleScroll();
+  }, [handleScroll]);
+
+  useEffect(() => {
+    if (inView && !loading) {
+      setTimeout(() => {
+        setPages((page) => page + 1);
+      }, 1500);
+    }
+  }, [inView]);
+
+  // 로그인 여부
+  if (!Storage.getUserIdItem()) {
+    alert('로그인이 필요한 서비스입니다. 로그인하러 가볼까요?');
+    document.location.href = '/login';
+  }
+
+  // 베스트 커뮤니티
+  const getRankingCommunity = async () => {
+    const res = await getRankingCommunityRequest();
+    const rankingMap = res.map(
+      (ranking: CommunityRankingType) => ranking.Community,
+    );
+    setRankings(rankingMap);
+  };
+
+  // 전체 커뮤니티 목록
+  const getCommunitiesList = async () => {
+    const res = await getCommunitiesRequest(pages);
+    setCommuList(res.selectedCommunity);
+  };
+
+  useEffect(() => {
+    getRankingCommunity();
+    getCommunitiesList();
+  }, []);
+
   return (
     <CommuBox>
       <Header>
@@ -17,7 +82,9 @@ const CommunityPage = () => {
         <PopularCommuBox>
           <RankingHeader>인기 커뮤니티</RankingHeader>
           <RankingBox>
-            <CommuRankingCard />
+            {rankings?.map((ranking) => (
+              <CommuRankingCard key={ranking.id} listInfo={ranking} />
+            ))}
           </RankingBox>
         </PopularCommuBox>
         <ListsBox>
@@ -30,7 +97,16 @@ const CommunityPage = () => {
           </CommuListHeader>
           <CommuListsBox>
             <ScrollBox>
-              <CommuListCard />
+              {commuList?.map((commu, idx) => {
+                const observerRef =
+                  commuList.length - 1 === idx ? ref : undefined;
+                return (
+                  <div key={commu.id} ref={observerRef}>
+                    <CommuListCard listInfo={commu} />
+                  </div>
+                );
+              })}
+              <div className="spinner">{loading ? <CommuSpinner /> : null}</div>
             </ScrollBox>
           </CommuListsBox>
         </ListsBox>
@@ -89,11 +165,10 @@ const ListsBox = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-left: 5rem;
 `;
 
 const CommuListHeader = styled.div`
-  width: 50rem;
+  width: 47rem;
   height: 2rem;
   line-height: 2rem;
   text-align: center;
@@ -107,7 +182,7 @@ const CommuListHeader = styled.div`
 
 const CommuListsBox = styled.div`
   height: 100%;
-  width: 52rem;
+  width: 50rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -119,12 +194,13 @@ const CommuListsBox = styled.div`
 const ScrollBox = styled.div`
   border: solid 2px ${theme.mainColor};
   border-radius: 10px;
-  width: 50rem;
-  height: 35rem;
+  width: 47rem;
+  height: 32rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 1rem;
+  padding-top: 20px;
 
   // 스크롤 조절
   overflow-x: hidden;
@@ -132,5 +208,11 @@ const ScrollBox = styled.div`
   overflow-y: scroll;
   ::-webkit-scrollbar {
     display: none;
+  }
+
+  .spinner {
+    display: flex;
+    align-items: center;
+    height: 15px;
   }
 `;

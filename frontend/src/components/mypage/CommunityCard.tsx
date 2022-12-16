@@ -1,34 +1,22 @@
 import styled, { keyframes } from 'styled-components';
 import { CommunityProps } from './Community';
-import {
-  EntryBtn,
-  CreateBtn,
-} from '../../assets/styles/common/commonComponentStyle';
 import { font } from '../../assets/styles/common/fonts';
+import { theme } from '../../assets/styles/common/palette';
+import { CommunityType } from '../../types/community/communityType';
 
 interface Props {
-  value: CommunityProps;
-  mode: string;
+  value: CommunityType;
+  children: React.ReactNode;
 }
 
 function CommunityCard(props: Props) {
   return (
     <Card>
       <Content>
-        <Img alt="room_img" src={props.value.img}></Img>
-        <RoomName>{props.value.title}</RoomName>
+        <Img alt="room_img" src={props.value.communityImage}></Img>
+        <RoomName>{props.value.name}</RoomName>
       </Content>
-      {props.mode == 'MyCommunity' ? (
-        <ButtonContainer>
-          <EntryBtn>수정</EntryBtn>
-          <CreateBtn>삭제</CreateBtn>
-        </ButtonContainer>
-      ) : (
-        <ButtonContainer>
-          <EntryBtn>내가 쓴 글</EntryBtn>
-          <CreateBtn>나가기</CreateBtn>
-        </ButtonContainer>
-      )}
+      {props.children}
     </Card>
   );
 }
@@ -49,7 +37,7 @@ const Card = styled.div`
   box-shadow: 1px 2px 5px gray;
   border-radius: 20px;
   padding: 20px;
-  background-color: #fffcf1;
+  background-color: ${theme.lightColor};
   :hover {
     animation-duration: 0.4s;
     animation-timing-function: ease-in-out;
@@ -67,18 +55,12 @@ const Content = styled.div`
 const Img = styled.img`
   width: 100px;
   height: 100px;
-  border-radius: 15px;
+  border-radius: 100%;
   object-fit: cover; // 이미지 확대하여 비율유지
 `;
 
 const RoomName = styled.div`
   text-align: center;
   font-family: ${font.bold};
-`;
-
-const ButtonContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
 `;
 export default CommunityCard;

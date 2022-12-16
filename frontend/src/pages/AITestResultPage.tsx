@@ -1,19 +1,54 @@
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../assets/styles/common/palette';
 import { font } from '../assets/styles/common/fonts';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getPuppiesData, postPuppyData } from '../apis/mypageFetcher';
+import Storage from '../storage/storage';
 
 const AITestResultPage = () => {
+  const [result, setResult] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const resultData = location.state.result;
+  const aiImage = location.state.aiImage;
+  const dogName = location.state.dogName;
+
+  useEffect(() => {
+    async function getData() {
+      setResult(resultData);
+    }
+    getData();
+  }, []);
   return (
     <ResultBox>
       <div style={{ letterSpacing: '1px', fontSize: '27px' }}>
         AI 견종 분석 결과
         <ResultDescBox>
-          <PuppyImg></PuppyImg>
+          <PuppyImg>
+            <img src={URL.createObjectURL(aiImage)} />
+          </PuppyImg>
           <PuppyResult>
-            "이름"의 견종 분석 결과
-            <ResultText></ResultText>
+            {`${dogName}의 견종 분석 결과`}
+            <ResultText>
+              {result &&
+                result.map((value) => (
+                  <Breed key={value.id}>
+                    <BreedText>{value.label}</BreedText>
+                    <BreedText>{(value.score * 100).toFixed(1)}%</BreedText>
+                  </Breed>
+                ))}
+            </ResultText>
             <div>로 확인되었습니다.</div>
-            <ShareBtn>다른 강아지 구경가기</ShareBtn>
+            {!Storage.getUserIdItem() ? (
+              <ShareBtn onClick={() => navigate('/login')}>
+                로그인 하고 댕댕이 보러 가기
+              </ShareBtn>
+            ) : (
+              <ShareBtn onClick={() => navigate('/reviewboard')}>
+                더 많은 댕댕이 보러 가기
+              </ShareBtn>
+            )}
           </PuppyResult>
         </ResultDescBox>
       </div>
@@ -30,8 +65,8 @@ const animation = keyframes`
 `;
 
 const ResultBox = styled.div`
-  width: 60rem;
-  height: 38rem;
+  width: 56rem;
+  height: 35rem;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -39,7 +74,7 @@ const ResultBox = styled.div`
   border-radius: 20px;
   font-family: ${font.bold};
   color: ${theme.boldColor};
-  background-color: #fffcf1;
+  background-color: ${theme.lightColor};
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.15);
   display: flex;
   justify-content: center;
@@ -48,9 +83,9 @@ const ResultBox = styled.div`
 `;
 
 const ResultDescBox = styled.div`
-  width: 44rem;
+  width: 45rem;
   height: 25rem;
-  margin-top: 3rem;
+  margin-top: 2rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: center;
@@ -58,7 +93,18 @@ const ResultDescBox = styled.div`
 
 const PuppyImg = styled.div`
   border: solid 1px ${theme.boldColor};
+  width: 90%;
   height: 24rem;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+
+  img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const PuppyResult = styled.div`
@@ -71,18 +117,32 @@ const PuppyResult = styled.div`
 `;
 
 const ResultText = styled.div`
-  height: 14rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 10px;
+  height: 9rem;
   width: 20rem;
   border: solid 1px;
+  padding: 5px;
+`;
+
+const Breed = styled.div`
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+`;
+
+const BreedText = styled.div`
+  font-size: 16px;
 `;
 
 const ShareBtn = styled.button`
   height: 4rem;
   width: 20rem;
-  margin-top: 15px;
+  margin-top: 60px;
   font-family: ${font.bold};
-  border: solid 1px ${theme.boldColor};
   border-radius: 10px;
+  border: solid 1px ${theme.boldColor};
   color: ${theme.boldColor};
   background-color: white;
   cursor: pointer;

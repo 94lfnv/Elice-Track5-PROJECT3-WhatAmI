@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { reviewCommentController } from '../controllers/revComment.ctrl';
+import { reviewCommentController } from '../controllers/reviewComment.ctrl';
 import { loginRequired } from '../middlewares/loginRequired.js';
 
 const reviewCommentRouter = Router();
@@ -8,14 +8,22 @@ const reviewCommentRouter = Router();
 reviewCommentRouter.post(
   '/reviewComment/:reviewId',
   loginRequired,
-  reviewCommentController.reviewComments,
+  reviewCommentController.newReviewComments,
 );
 //게시물(리뷰)에 댓글 전부 다 보기
 reviewCommentRouter.get(
   '/reviewComment/:reviewId',
   loginRequired,
-  reviewCommentController.showComments,
+  reviewCommentController.showReviewComments,
 );
+
+//게시물(리뷰)에 댓글 한개 보기
+reviewCommentRouter.get(
+  '/reviewComment/:reviewId/:reviewCommentId',
+  loginRequired,
+  reviewCommentController.showOneReviewComments,
+);
+
 //내가 쓴 리뷰 수정
 reviewCommentRouter.put(
   '/reviewComment/:reviewCommentId',

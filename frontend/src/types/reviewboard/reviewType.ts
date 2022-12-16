@@ -1,19 +1,71 @@
 export interface ReviewInitialType {
   description: string;
-  images: string | Blob;
+  // images: string;
 }
 
 export interface ReviewCommentType {
-  reviewCommentId: number;
   description: string;
-  reviewId: string;
-  userId: string;
-}
-export interface ReviewsListType {
+  id: number;
   reviewId: number;
+  userId: string;
+  nickname: string;
+  profileImg: string;
+}
+
+export interface ReviewType {
+  AiSearchResult: {
+    aiImage: string;
+  };
+  aiResultId: number;
+  id: number;
   description: string;
   userId: string;
-  images: string;
   createdAt: string;
   updatedAt: string;
+  likeCount: number;
+  likeStatus: number;
+}
+
+export interface ReviewPostType {
+  id: number;
+  description: string;
+  userId: string;
+  aiResultId: number | string;
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface OneReviewType {
+  AiSearchResult: {
+    aiImage: string;
+  };
+  User: {
+    nickname: string;
+    profileImg: string;
+  };
+  description: string;
+  id: number;
+  userId: string;
+}
+
+export interface AITestType {
+  aiResultId: number;
+  id: number;
+  label: string;
+  rank: number;
+  score: number;
+}
+
+export interface AIresultType {
+  Predictions: {
+    aiResultId: number;
+    id: number;
+    label: string;
+    rank: number;
+    score: number;
+  };
+  aiImage: string;
+  dogName: string;
+  id: number;
+  userId: string;
 }

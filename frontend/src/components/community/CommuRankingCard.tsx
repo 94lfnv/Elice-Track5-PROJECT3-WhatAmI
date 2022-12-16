@@ -1,20 +1,30 @@
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../../assets/styles/common/palette';
 import { font } from '../../assets/styles/common/fonts';
-import LikeBtn from '../common/LikeBtn';
+import { CommunityType } from '../../types/community/communityType';
+import CommuLikeBtn from './CommuLikeBtn';
 
-const CommuRankingCard = () => {
-  const navigate = useNavigate();
+export interface CommunityTypeProps {
+  listInfo?: CommunityType;
+}
 
+const CommuRankingCard = ({ listInfo }: CommunityTypeProps) => {
   return (
-    <CommuRankingCardBox onClick={() => navigate('/likedcommunity')}>
-      <CommuImage></CommuImage>
-      <CommuName>댕댕이를 사랑하는 일산인들의 모임</CommuName>
-      <div className="like-icon">
-        <LikeBtn />
-      </div>
-    </CommuRankingCardBox>
+    <Link
+      style={{ textDecoration: 'none', color: 'black' }}
+      to={`/likedcommunity?id=${listInfo?.id}`}
+    >
+      <CommuRankingCardBox>
+        <CommuImage>
+          <img src={listInfo?.communityImage} />
+        </CommuImage>
+        <CommuName>{listInfo?.name}</CommuName>
+        <div className="like-icon">
+          <CommuLikeBtn listInfo={listInfo} />
+        </div>
+      </CommuRankingCardBox>
+    </Link>
   );
 };
 
@@ -30,7 +40,7 @@ const popup = keyframes`
 `;
 
 const CommuRankingCardBox = styled.div`
-  width: 11rem;
+  width: 12rem;
   height: 12rem;
   border-radius: 20px;
   margin: 0px 10px;
@@ -38,7 +48,7 @@ const CommuRankingCardBox = styled.div`
   flex-direction: column;
   align-items: center;
   background-color: ${theme.backColor};
-  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.3);
 
   position: relative;
   overflow: hidden;
@@ -64,11 +74,19 @@ const CommuRankingCardBox = styled.div`
 `;
 
 const CommuImage = styled.div`
-  height: 7rem;
-  width: 9rem;
-  border: solid 1px gray;
-  margin-top: 10px;
+  height: 150px;
+  width: 170px;
+  margin-top: 15px;
   border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+
+  img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const CommuName = styled.div`
@@ -76,6 +94,6 @@ const CommuName = styled.div`
   height: 3.5rem;
   margin-top: 10px;
   text-align: center;
-  font-family: ${font.normal};
-  font-size: 14px;
+  font-family: ${font.bold};
+  font-size: 15px;
 `;

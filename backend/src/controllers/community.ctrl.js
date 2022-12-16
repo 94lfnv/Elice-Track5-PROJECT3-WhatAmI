@@ -1,73 +1,94 @@
-import { Community } from '../models/Community.model';
 import { communityService } from '../services/community.service';
 
 class communityController {
+  // 1. 커뮤니티 만들기
   static async addCommunity(req, res, next) {
     try {
       const userId = req.currentUserId;
-
       const { name, introduction } = req.body;
-      const newCommunity = await communityService.createCommunity({
+      const image = req.file;
+      const communityImage =
+        // image == undefined ? null : image.transforms[0].location;
+        image == undefined ? null : image.location;
+      const newCommunity = await communityService.createCommunity(
         name,
         introduction,
-      });
-      if (newCommunity.errorMessage) {
-        throw new Error(newUser, errorMessage);
+        userId,
+        communityImage,
+      );
+      return res.status(201).send(newCommunity);
+    } catch (error) {
+      next(error);
+    }
+  }
+  // 2. 커뮤니티 1개 가져오기
+  static async getOne(req, res, next) {
+    try {
+      const userId = req.currentUserId;
+      const id = req.params.communityId;
+      const findOne = await communityService.getOneCommunity({ id, userId });
+      if (findOne.errorMessage) {
+        throw new Error(findOne, errorMessage);
       }
-      return res.status(201).json(newCommunity);
+      return res.status(200).json(findOne);
     } catch (error) {
       next(error);
     }
   }
 
-  static async communityImage(req, res, next) {
-    try {
-      const userId = req.currentUserId;
-      const id = req.params.id;
-      const communityImage = req.file.location;
-      const image = await communityService.addCommunityImage({
-        id,
-        userId,
-        communityImage,
-      });
-      return res.status(200).json({
-        id,
-        userId,
-        communityImage,
-        success: true,
-        message: '이미지가 저장되었습니다.',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-  //전체 커뮤니티 리스트 10개씩
+  // 3. 전체 커뮤니티 리스트 10개씩
   static async getCommunityList(req, res, next) {
     try {
+      const userId = req.currentUserId;
       const { page } = req.query;
       const defaultPage = page || 1;
-      const communityCount = await communityService.countCommunityPage();
-      const selectedCommunities = await communityService.selectCommunities(
+      const countCommunityPage = await communityService.countCommunity();
+      const selectedCommunity = await communityService.selectCommunity(
         defaultPage,
+        userId,
       );
-      if (selectedCommunities.errorMessage) {
-        throw new Error(selectedCommunities, errorMessage);
+      if (!selectedCommunity) {
+        throw new Error(selectedCommunity);
       }
-      return res.status(200).json(communityCount, selectedCommunities);
+      return res.status(200).json({ countCommunityPage, selectedCommunity });
     } catch (err) {
       next(err);
     }
   }
-  static async updateCommunity(req, res) {
+
+  // 4. 인기 커뮤니티 3개 가져오기
+  static async getBestCommunities(req, res, next) {
     try {
       const userId = req.currentUserId;
-
+      const getLikedCommunities = await communityService.findBestCommunities({
+        userId,
+      });
+      res.status(200).json(getLikedCommunities);
+    } catch (error) {
+      next(error);
+    }
+  }
+  // 5. 전체 커뮤니티와 커뮤니티 별 게시물들 보여주기
+  static async getCommunitiesAndPosts(req, res, next) {
+    try {
+      const userId = req.currentUserId;
+      const getAll = await communityService.findAllCommunities();
+      res.status(200).json(getAll);
+    } catch (error) {
+      next(error);
+    }
+  }
+  // 6. 커뮤니티 수정
+  static async updateCommunity(req, res, next) {
+    try {
+      const userId = req.currentUserId;
+      const { name, introduction } = req.body;
       const communityId = req.params.communityId;
-      const { name, communtyImage, introduction } = req.body;
-
+      const image = req.file;
+      const updatedImage = image == undefined ? null : image.location;
       const updateCommunity = await communityService.updateCommunity({
         name,
-        communtyImage,
+        updatedImage,
         introduction,
         communityId,
         userId,
@@ -83,17 +104,18 @@ class communityController {
       });
       return res.status(200).json(message);
     } catch (error) {
-      return res.status(400).json({ code: 400, message: error.message });
+      return next(error);
     }
   }
-
-  static async deleteCommunity(req, res) {
+  // 7. 커뮤니티 삭제
+  static async deleteCommunity(req, res, next) {
     try {
       const userId = req.currentUserId;
-      const communityId = req.params.communityId;
+      // const userId = testId;
+      const id = req.params.communityId;
 
       const deleteCommunity = await communityService.deleteCommunity({
-        communityId,
+        id,
         userId,
       });
       if (deleteCommunity.errorMessage) {
@@ -101,7 +123,23 @@ class communityController {
       }
       return res.status(200).json(deleteCommunity);
     } catch (error) {
-      return res.status(400).json({ code: 400, message: error.message });
+      return next(error);
+    }
+  }
+  // 8. 커뮤니티 검색기능
+  static async getFoundCommunities(req, res, next) {
+    try {
+      const userId = req.currentUserId;
+      const search = req.query.data;
+      const searchedData = await communityService.searchedCommunities({
+        search,
+      });
+      if (searchedData.errorMessage) {
+        throw new Error(searchedData, errorMessage);
+      }
+      res.status(200).json(searchedData);
+    } catch (error) {
+      next(error);
     }
   }
 }

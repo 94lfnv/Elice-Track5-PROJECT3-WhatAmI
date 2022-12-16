@@ -11,7 +11,7 @@ const popup = keyframes`
   }
 `;
 
-const animation = keyframes`
+const jump = keyframes`
   50% {
     transform: scale(1.1);
   }
@@ -19,18 +19,30 @@ const animation = keyframes`
 
 export const CommonMyButton = styled.button`
   width: 100%;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  height: 50px;
+  line-height: 50px;
   cursor: pointer;
   font-weight: bold;
-  border-radius: 10px;
+  border: none;
+  border-radius: 20px;
+  color: white;
+  background-color: ${theme.pointColor};
+  transition: 0.4s;
+  &:hover {
+    color: ${theme.pointColor};
+    background-color: white;
+    border: 2px solid ${theme.pointColor};
+  }
 `;
 
 export const CommonMyInput = styled.input`
-  width: 94%;
-  padding: 6px 12px;
-  border-radius: 10px;
+  width: 90%;
+  height: 25px;
+  padding: 8px 16px;
+  border-radius: 20px;
   outline: none;
+  border: 2px solid black;
+  font-size: 16px;
 `;
 
 export const AuthFormWrapper = styled.form`
@@ -39,24 +51,32 @@ export const AuthFormWrapper = styled.form`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 1rem;
+  align-items: center;
+  gap: 20px;
+  margin-top: 1rem;
 `;
 
 export const AuthFormInputContainer = styled.div`
   width: 100%;
-  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
 `;
 
 export const AuthFormButtonContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
   margin-top: 1rem;
 `;
 
-export const SearchBox = styled.div`
+export const SearchBox = styled.form`
   width: 23rem;
   height: 2rem;
   display: flex;
-  flex-direction: row;
+
   input {
     width: 18.5rem;
   }
@@ -100,18 +120,17 @@ export const EntryBtn = styled.button`
   :hover {
     animation-duration: 0.3s;
     animation-timing-function: ease-in-out;
-    animation-name: ${animation};
+    animation-name: ${jump};
   }
 `;
 
 export const EditDelBtn = styled.button`
   width: 3rem;
   height: 1.6rem;
-  margin-top: 0.5rem;
   border-radius: 20px;
   background-color: white;
   border: solid 1px ${theme.mainColor};
   cursor: pointer;
   color: ${theme.mainColor};
-  margin-right: 8px;
+  margin-right: 5px;
 `;

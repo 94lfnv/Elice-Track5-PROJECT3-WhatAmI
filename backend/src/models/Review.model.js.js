@@ -4,15 +4,24 @@ class Review extends Sequelize.Model {
   static init(sequelize) {
     return super.init(
       {
+        id: {
+          allowNull: false,
+          autoIncrement: true,
+          primaryKey: true,
+          foreignKey: true,
+          type: DataTypes.INTEGER,
+        },
         description: {
           type: DataTypes.STRING(500),
           allowNull: false,
         },
-        // userId: {
-        //   type: DataTypes.STRING(500),
-        // },
-        images: {
-          type: DataTypes.TEXT,
+        userId: {
+          type: DataTypes.UUID,
+          foreignKey: true,
+        },
+        aiResultId: {
+          type: Sequelize.INTEGER,
+          foreignKey: true,
           allowNull: true,
         },
       },
@@ -28,18 +37,22 @@ class Review extends Sequelize.Model {
   static associate(db) {
     db.Review.belongsTo(db.User, {
       foreignKey: 'userId',
-      sourceKey: 'userId',
+      targetKey: 'userId',
     });
-
     db.Review.hasMany(db.ReviewComment, {
       foreignKey: 'reviewId',
-      sourceKey: 'id',
+      targetKey: 'id',
+    });
+    db.Review.hasMany(db.ReviewLike, {
+      foreignKey: 'reviewId',
+      targetKey: 'id',
+    });
+    db.Review.belongsTo(db.AiSearchResult, {
+      foreignKey: 'aiResultId',
+      targetKey: 'id',
+      onDelete: 'CASCADE',
     });
   }
 }
 
 export { Review };
-//외래키 따로 sql에 직접 입력해주었음.(associate 주석부분 에러나서)
-// alter table reviews add foreign key( userId ) references users(userId) on delete cascade;
-// alter table reviewComments add foreign key( userId ) references users(userId) on delete cascade;
-// alter table reviewComments add foreign key( reviewId ) references reviews(reviewId) on delete cascade;

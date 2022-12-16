@@ -1,38 +1,44 @@
+import { useState } from 'react';
 import styled from 'styled-components';
 import { font } from '../../assets/styles/common/fonts';
 import {
   EntryBtn,
   CreateBtn,
 } from '../../assets/styles/common/commonComponentStyle';
-import { dnaListProps } from './Result';
+import {
+  deleteUserReview,
+  getUserReview,
+  getUserReviews,
+} from '../../apis/mypageFetcher';
+import { useConfirm } from '../../hooks/confirm/useConfirm';
+import { theme } from '../../assets/styles/common/palette';
+import { Modal } from '@mui/material';
+import ReviewContentsViewer from '../reviewBoard/ReviewContentsViewer';
+import { ReviewType } from '../../types/reviewboard/reviewType';
 
 interface receiveProps {
-  value: dnaListProps;
+  value: ReviewType;
+  setReviews: React.Dispatch<React.SetStateAction<ReviewType[]>>;
 }
 
 function ResultCard(props: receiveProps) {
-  // 삭제버튼 클릭 시 확인창 함수
-  // TODO 확인창 함수를 공통컴포넌트로 뺄까?
-  const useConfirm = (message: any, onConfirm: any, onCancel: any) => {
-    if (!onConfirm || typeof onConfirm !== 'function') {
-      return;
-    }
-    if (onCancel && typeof onCancel !== 'function') {
-      return;
-    }
+  const [open, setOpen] = useState(false);
 
-    const confirmAction = () => {
-      if (window.confirm(message)) {
-        onConfirm();
-      } else {
-        onCancel();
-      }
-    };
-    return confirmAction;
-  };
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
-  const deleteConfirm = () => console.log('삭제했습니다.');
-  const cancelConfirm = () => console.log('취소했습니다.');
+  async function getReview() {
+    setOpen(true);
+    const response = await getUserReview(props.value.id);
+  }
+  async function deleteReview() {
+    await deleteUserReview(props.value.id);
+    const response = await getUserReviews();
+    props.setReviews(response);
+  }
+
+  const deleteConfirm = () => (deleteReview(), window.alert('삭제했습니다.'));
+  const cancelConfirm = () => window.alert('취소했습니다.');
 
   const confirmDelete = useConfirm(
     '삭제하시겠습니까?',
@@ -41,17 +47,29 @@ function ResultCard(props: receiveProps) {
   );
   return (
     <CardContainer>
-      <Img src={props.value.img} alt="dog_img"></Img>
-      <Name>{props.value.name}</Name>
-      {/* TODO 마우스 호버 시 버튼 컴포넌트가 카드 앞에 등장하게끔 어떻게할까*/}
+      <Img src={props.value.AiSearchResult.aiImage} alt="dog_img"></Img>
+      <Name>{props.value.description}</Name>
       <div className="wrapper">
         <ButtonContainer id="ButtonContainer">
-          <DetailButton color="#000000">상세</DetailButton>
+          <DetailButton color="#000000" onClick={getReview}>
+            상세
+          </DetailButton>
           <DeleteButton color="#ff0000" onClick={confirmDelete}>
             삭제
           </DeleteButton>
         </ButtonContainer>
       </div>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <ReviewContentsViewer
+          review={props.value}
+          currentUser={props.value.userId}
+        />
+      </Modal>
     </CardContainer>
   );
 }
@@ -67,7 +85,7 @@ const CardContainer = styled.div`
   border-radius: 20px;
   box-shadow: 1px 2px 5px gray;
   padding: 20px;
-  background-color: #fffcf1;
+  background-color: ${theme.lightColor};
   transition: all 0.1s linear;
   font-family: ${font.normal};
 

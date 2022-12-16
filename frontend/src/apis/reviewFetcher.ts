@@ -1,44 +1,68 @@
-import {
-  ReviewCommentType,
-  ReviewInitialType,
-} from '../types/reviewboard/reviewType';
+import { ReviewInitialType } from '../types/reviewboard/reviewType';
 import axiosInstance from '../utils/axiosInstance';
+import Storage from '../storage/storage';
 
-// 글쓰기
+// 리뷰 게시판 글쓰기
 export async function createReviewRequest(
   endpoint: string,
-  { description, images }: ReviewInitialType,
+  { description }: ReviewInitialType,
 ) {
-  const formData = new FormData();
-  formData.append('description', description);
-  formData.append('images', images as File);
-  const res = await axiosInstance.post(endpoint, formData, {
+  // const formData = new FormData();
+  // formData.append('description', description);
+  // formData.append('images', images);
+  // 이미지가 배열이라면 images as File[]로 써야 한다.
+
+  const res = await axiosInstance.post(endpoint, {
+    description: description,
+  });
+
+  // const res = await axiosInstance.post(endpoint, {
+  //   headers: {
+  //     'Content-Type': 'multipart/form-data',
+  //     Authorization: `Bearer ${Storage.getTokenItem()}`,
+  //   },
+  // });
+  return res.data;
+}
+
+// 리뷰 창에서 댓글 달기
+export async function createReviewCommentRequest(
+  endpoint: string,
+  description: string,
+) {
+  const res = await axiosInstance.post(endpoint, {
+    description,
+  });
+  return res.data;
+}
+
+// 리뷰 불러오기
+export async function getReviewRequest(endpoint: string) {
+  const res = await axiosInstance.get(endpoint, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${Storage.getTokenItem()}`,
     },
   });
   return res.data;
 }
 
-// 댓글 달기
-export async function createReviewCommentRequest(
-  endpoint: string,
-  description: ReviewCommentType,
-) {
-  const res = await axiosInstance.post(endpoint, {
+// 리뷰 수정
+export async function editReviewRequest(endpoint: string, description: string) {
+  const res = await axiosInstance.put(endpoint, {
     description: description,
   });
   return res.data;
 }
 
-// 정보 불러오기
+// 리뷰 삭제
+export async function deleteReviewRequest(endpoint: string) {
+  const res = await axiosInstance.delete(endpoint);
+  return res.data;
+}
 
-export async function getReviewsListRequest(endpoint: string) {
-  const res = await axiosInstance.get(endpoint, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  console.log(res);
+// 좋아요 포스트
+export async function likeRequest(reviewId: number) {
+  const res = await axiosInstance.post(`/reviewLike/${reviewId}`);
   return res.data;
 }

@@ -1,12 +1,12 @@
 export const menus = [
   {
-    title: 'DNA검사',
+    title: 'AI 종 분석',
     path: '/dna',
     id: 'dna',
   },
   {
     title: '후기게시판',
-    path: '/board',
+    path: '/reviewboard',
     id: 'board',
   },
   {

@@ -1,76 +1,240 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { font } from '../assets/styles/common/fonts';
 import {
   EditDelBtn,
-  EntryBtn,
   SearchBox,
 } from '../assets/styles/common/commonComponentStyle';
-import WritingModal from '../components/modal/WritingModal';
-import ContentsModal from '../components/modal/ContentsModal';
 import { theme } from '../assets/styles/common/palette';
-import LikeBtn from '../components/common/LikeBtn';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import PaginateButton from '../components/pagination/PaginateButton';
+import CommuWritingModal from '../components/modal/CommuWritingModal';
+import CommuContentsModal from '../components/modal/CommuContentsModal';
+import {
+  editCommunityRequest,
+  getCurrentCommunityRequest,
+} from '../apis/communityFetcher';
+import {
+  CommunityType,
+  CommuNumType,
+  CurrentCommuPostsType,
+} from '../types/community/communityType';
+import CommuLikeBtn from '../components/community/CommuLikeBtn';
+import { UserInfoType } from '../types/auth/authType';
+import { getUserData } from '../apis/mypageFetcher';
 
 const LikedCommuPage = () => {
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [commuPosts, setCommuPosts] = useState<CurrentCommuPostsType[]>([]);
+  const [commuInfo, setCommuInfo] = useState<CommunityType>();
+  const [postCount, setPostCount] = useState<CommuNumType>();
+  const [currentUserInfo, setCurrentUserInfo] = useState<UserInfoType>();
+  const [editing, setEditing] = useState<Boolean>(false);
+  const [newName, setNewName] = useState<string>('');
+  const [newIntroduction, setNewIntroduction] = useState<string>('');
+  const [newCommuImg, setNewCommuImg] = useState<File | null>(null);
+  const [newPreview, setNewPreview] = useState<string>('');
+  const editImgRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
+  const editTextAreaRef = useRef<HTMLTextAreaElement>(null);
 
-  // const fetchData = async () => {
-  //   const res = await currentCommuListRequest('community?page="page"');
-  //   setPosts(res.data);
-  // };
+  // 쿼리 스트링에 값 넣어주기
+  let getParameter = (key: string) => {
+    return new URLSearchParams(location.search).get(key);
+  };
+  const id = getParameter('id');
+  const getCommunityData = async () => {
+    const res = await getCurrentCommunityRequest(`communities/posts/${id}`);
+    setCommuInfo(res);
+  };
 
-  // useEffect(() => {
-  //   fetchData();
-  // }, []);
+  // 현재 로그인 중인 유저 정보 받기
+  const getCurrentUserInfo = async () => {
+    const res = await getUserData();
+    setCurrentUserInfo(res);
+  };
 
+  // 커뮤니티 내 전체 게시글 받아오기
+  const getPosts = async () => {
+    const res = await getCurrentCommunityRequest(
+      `communityPost/${id}?page=${page}`,
+    );
+    setCommuPosts(res.selectedCommunityPost);
+    setTotalPages(res.communityPostCount);
+    setPostCount(res);
+  };
+
+  useEffect(() => {
+    getCommunityData();
+    getPosts();
+    getCurrentUserInfo();
+  }, [page]);
+
+  // 커뮤니티 수정
+  useEffect(() => {
+    if (editing) {
+      if (editTextAreaRef.current) {
+        editTextAreaRef.current.focus();
+      }
+    }
+  }, [editing]);
+
+  const onClickCommuintyEditBtn = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setEditing(true);
+  };
+
+  const onChangeCommunityEditInput = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setNewName(e.target.value);
+  };
+
+  const onChangeCommunityEditTextArea = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    setNewIntroduction(e.target.value);
+  };
+
+  // 사진 미리보기
+  const handleChangeImgFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const file = e.target.files[0];
+      setNewCommuImg(file);
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onload = () => {
+        setNewPreview(reader.result as string);
+      };
+    }
+  };
+
+  // 커뮤니티 수정 버튼 함수
+  const handleCommunityEditButton = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (commuInfo?.communityImage) {
+      await editCommunityRequest(`communities/${id}`, {
+        name: newName,
+        introduction: newIntroduction,
+        communityImage: newCommuImg ? newCommuImg : commuInfo?.communityImage,
+      });
+      setEditing(false);
+
+      const result = await getCurrentCommunityRequest(
+        `communities/posts/${id}`,
+      );
+      setCommuInfo(result);
+    }
+  };
   return (
-    <>
-      <BigBox>
-        <CommunityBox>
-          <IntroBox>
-            <ImageBox />
-            <NameBox>
-              <CommuName>커뮤니티 이름 [체크 버튼]</CommuName>
-              <CommuIntro>
-                커뮤니티 소개가 들어가는 칸입니다. 귀여운 내 새끼 나만 볼 수는
-                없죠! 마구마구 자랑해주시길 바랍니다. 그래서 만든 커뮤니티예요.
-                여러분 마구마구 자랑을 갈겨 주세요!
-              </CommuIntro>
-              <EditDelBtn>수정</EditDelBtn>
-            </NameBox>
-            <BtnBox>
-              <EntryBtn style={{ marginBottom: '1rem' }}>채팅방 입장</EntryBtn>
-              <WritingModal />
-            </BtnBox>
-          </IntroBox>
-          <SmallBox>
-            <SearchBox style={{ height: '1.8rem' }}>
-              <input></input>
-              <button>검색</button>
-            </SearchBox>
-            <InfoBox>
-              <div>
-                <LikeBtn />
-                &nbsp;10
-              </div>
-              <div>
-                <StickyNote2Icon />
-                &nbsp;10
-              </div>
-            </InfoBox>
-          </SmallBox>
-          <ContentsBox>{/* <ContentsModal /> */}</ContentsBox>
-          <PaginateButton
-            page={page}
-            setPage={setPage}
-            totalPages={totalPages}
-          />
-        </CommunityBox>
-      </BigBox>
-    </>
+    <BigBox>
+      <CommunityBox>
+        <IntroBox>
+          {commuInfo && editing ? (
+            <ImageBox>
+              <label htmlFor="img_file">
+                {newPreview && <img src={newPreview} />}
+                이미지 수정
+              </label>
+              <input
+                hidden
+                ref={editImgRef}
+                type="file"
+                id="img_file"
+                accept="image/*"
+                onChange={handleChangeImgFile}
+              />
+            </ImageBox>
+          ) : (
+            <ImageBox>
+              <img src={commuInfo?.communityImage} />
+            </ImageBox>
+          )}
+
+          <NameBox>
+            <CommuName>
+              {commuInfo && editing ? (
+                <>
+                  <input
+                    className="newname-text"
+                    ref={editInputRef}
+                    value={newName}
+                    onChange={onChangeCommunityEditInput}
+                    autoFocus={true}
+                    onFocus={() => setNewName(commuInfo.name)}
+                  />
+                  <EditDelBtn
+                    style={{ margin: '0 10px' }}
+                    onClick={handleCommunityEditButton}
+                  >
+                    완료
+                  </EditDelBtn>
+                </>
+              ) : (
+                <>
+                  <div>{commuInfo?.name}</div>
+                  {commuInfo?.userId === currentUserInfo?.userId ? (
+                    <EditDelBtn
+                      style={{ margin: '0 10px' }}
+                      onClick={onClickCommuintyEditBtn}
+                    >
+                      수정
+                    </EditDelBtn>
+                  ) : null}
+                </>
+              )}
+            </CommuName>
+            <CommuIntro>
+              {commuInfo && editing ? (
+                <textarea
+                  className="newintro-text"
+                  ref={editTextAreaRef}
+                  value={newIntroduction}
+                  onChange={onChangeCommunityEditTextArea}
+                  autoFocus={true}
+                  onFocus={() => setNewIntroduction(commuInfo.introduction)}
+                />
+              ) : (
+                <div>{commuInfo?.introduction}</div>
+              )}
+            </CommuIntro>
+          </NameBox>
+          <WritingBtnBox>
+            <CommuWritingModal commuInfo={commuInfo} />
+          </WritingBtnBox>
+        </IntroBox>
+        <SmallBox>
+          <SearchBox style={{ height: '1.8rem' }}>
+            <input></input>
+            <button>검색</button>
+          </SearchBox>
+          <InfoBox>
+            <div>
+              <CommuLikeBtn listInfo={commuInfo} />
+            </div>
+            <div>
+              <StickyNote2Icon style={{ marginRight: '3px' }} />
+              {postCount?.communityPostCount}
+            </div>
+          </InfoBox>
+        </SmallBox>
+        <ContentsBox>
+          {commuPosts?.map((commuPost) => (
+            <CommuContentsModal
+              key={commuPost.id}
+              commuInfo={commuInfo}
+              commuPost={commuPost}
+              currentUserInfo={currentUserInfo}
+              getPosts={getPosts}
+            />
+          ))}
+        </ContentsBox>
+        <PaginateButton page={page} setPage={setPage} totalPages={totalPages} />
+      </CommunityBox>
+    </BigBox>
   );
 };
 
@@ -94,7 +258,7 @@ const CommunityBox = styled.div`
   flex-direction: column;
   align-items: center;
   border-radius: 30px;
-  box-shadow: 6px 6px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3);
   position: relative;
 `;
 
@@ -103,61 +267,101 @@ const IntroBox = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
-  margin-top: 1.5rem;
+  margin-top: 25px;
+  position: relative;
 `;
 
 const ImageBox = styled.div`
-  border: solid 1px black;
-  border-radius: 50%;
+  /* border: solid 1px black; */
+  border-radius: 5px;
   height: 9rem;
-  width: 9rem;
-  margin: 0rem 2rem;
+  width: 10rem;
+  margin-right: 15px;
+  margin-left: 75px;
+  position: relative;
+  overflow: hidden;
+
+  label {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const NameBox = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  width: 30rem;
-  height: 75%;
+  /* height: 75%; */
+  margin-left: 10px;
 `;
 
 const CommuName = styled.div`
   display: flex;
   align-items: center;
-  width: 25rem;
+  width: 550px;
   height: 3rem;
   font-family: ${font.bold};
-  font-size: 1.3rem;
+  font-size: 22px;
   letter-spacing: 0.1rem;
+
+  .newname-text {
+    width: 480px;
+    height: 60%;
+    font-family: ${font.bold};
+    font-size: 18px;
+    letter-spacing: 0.1rem;
+    resize: none;
+  }
 `;
 
 const CommuIntro = styled.div`
-  display: flex;
-  align-items: center;
-  width: 30rem;
-  height: 4rem;
+  display: block;
+  width: 480px;
+  height: 5rem;
   font-family: ${font.normal};
-  font-size: 0.85rem;
-  line-height: 1.3rem;
+  font-size: 16.5px;
+  /* margin-top: 5px; */
+  line-height: 22px;
+  white-space: pre-wrap;
+
+  .newintro-text {
+    width: 475px;
+    height: 4rem;
+    font-family: ${font.normal};
+    font-size: 15px;
+    letter-spacing: 0.1rem;
+    resize: none;
+  }
 `;
 
-const BtnBox = styled.div`
+const WritingBtnBox = styled.div`
   display: flex;
-  flex-direction: column;
-  width: 11rem;
+  position: absolute;
+  bottom: 0;
+  right: 80px;
 `;
 
 const SmallBox = styled.div`
   height: 2rem;
-  width: 50rem;
+  width: 49.5rem;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   margin-top: 1rem;
-  padding-right: 1rem;
+  padding-right: 20px;
 `;
 
 const InfoBox = styled.div`
@@ -167,6 +371,7 @@ const InfoBox = styled.div`
   flex-direction: row;
   justify-content: flex-end;
   align-items: center;
+
   div {
     margin-left: 10px;
     font-size: 1rem;
@@ -176,9 +381,10 @@ const InfoBox = styled.div`
 `;
 
 const ContentsBox = styled.div`
-  width: 60rem;
-  display: flex;
-  flex-wrap: wrap;
   justify-content: center;
-  margin: 1.5rem;
+  margin: 1rem;
+  width: 47rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
 `;

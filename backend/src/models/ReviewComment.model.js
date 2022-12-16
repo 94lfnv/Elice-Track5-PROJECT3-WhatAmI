@@ -8,12 +8,14 @@ class ReviewComment extends Sequelize.Model {
           type: DataTypes.STRING(500),
           allowNull: false,
         },
-        // reviewId: {
-        //   type: Sequelize.INTEGER,
-        // },
-        // userId: {
-        //   type: DataTypes.STRING(500),
-        // },
+        reviewId: {
+          type: DataTypes.INTEGER,
+          foreignKey: true,
+        },
+        userId: {
+          type: DataTypes.UUID,
+          foreignKey: true,
+        },
       },
       {
         sequelize,
@@ -28,12 +30,13 @@ class ReviewComment extends Sequelize.Model {
     db.ReviewComment.belongsTo(db.Review, {
       foreignKey: 'reviewId',
       sourceKey: 'id',
+      onDelete: 'CASCADE',
     });
   }
   static associate(db) {
     db.ReviewComment.belongsTo(db.User, {
       foreignKey: 'userId',
-      sourceKey: 'userId',
+      targetKey: 'userId',
     });
   }
 }

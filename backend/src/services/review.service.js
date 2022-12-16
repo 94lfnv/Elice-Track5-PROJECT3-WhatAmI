@@ -1,18 +1,40 @@
 import { Review } from '../models/Review.model.js';
+import { ReviewLike } from '../models/ReviewLike.model';
+import sequelize from '../config/sequelize';
+
 import { REVIEW_PER_PAGE } from '../utils/Constant';
 import { Sequelize } from 'sequelize';
+import { AiSearchResult } from '../models/AiSearchResult.model.js';
+import { User } from '../models/User.model';
 
 const Op = Sequelize.Op;
 
 class reviewService {
+  static async addReview({ description, userId, aiResultId }) {
+    const findReview = await Review.findOne({
+      where: { userId, aiResultId },
+    });
+
+    if (findReview) {
+      const errorMessage = '이미 후기가 작성된 결과입니다.';
+      return errorMessage;
+    }
+
+    // db에 저장
+    const createdNewReview = await Review.create({
+      description,
+      userId,
+      aiResultId,
+    });
+    createdNewReview.errorMessage = null; // 문제 없이 db 저장 완료되었으므로 에러가 없음.
+
+    return createdNewReview;
+  }
+
   //모든리뷰 다 가지고 오기
   static async countReviewpage() {
     const reviewCount = await Review.count();
 
-    // const reviewId = await Review.findAll({
-    //   where: { reviewId: { [Op.gt]: 0 } },
-    // });
-    // console.log(reviewCount, REVIEW_PER_PAGE);
     if (reviewCount % REVIEW_PER_PAGE === 0) {
       return reviewCount / REVIEW_PER_PAGE;
     } else {
@@ -20,62 +42,74 @@ class reviewService {
     }
   }
 
-  static async selectReviews(page) {
-    // console.log(page);
-    // console.log(REVIEW_PER_PAGE);
-
-    // console.log((page - 1) * REVIEW_PER_PAGE); // NaN
-    const selectedReivews = await Review.findAll({
-      offset: (page - 1) * REVIEW_PER_PAGE,
+  static async selectReviews(defaultpage, _userId) {
+    const selectedReviews = await Review.findAll({
+      include: {
+        model: AiSearchResult,
+        attributes: {
+          exclude: ['userId', 'id', 'dogName'],
+        },
+      },
+      offset: (defaultpage - 1) * REVIEW_PER_PAGE,
       limit: REVIEW_PER_PAGE,
-      // offset: 0,
-      // limit: 10,
+      order: [['id', 'DESC']],
     });
 
-    if (!selectedReivews) {
-      throw ApiError.setBadRequest('No reivew available');
+    for (const review of selectedReviews) {
+      review.dataValues.likeCount = await ReviewLike.count({
+        where: { reviewId: review.id },
+      });
+      review.dataValues.likeStatus = await ReviewLike.count({
+        where: { userId: _userId, reviewId: review.id },
+      });
+      review.aiImage = await AiSearchResult.findOne({
+        where: { userId: _userId, id: review.aiResultId },
+      });
     }
 
-    return selectedReivews;
+    return selectedReviews;
   }
 
-  //
-  static async addReview({ description, images, userId }) {
-    // db에 저장
-    const createdNewReview = await Review.create({
-      description,
-      images,
-      userId,
+  static async showMyReviews({ userId }) {
+    console.log(userId);
+    const getMyReviews = await Review.findAll({
+      where: { userId: userId },
+      include: {
+        model: AiSearchResult,
+        attributes: {
+          exclude: ['userId', 'id', 'dogName'],
+        },
+      },
     });
-    createdNewReview.errorMessage = null; // 문제 없이 db 저장 완료되었으므로 에러가 없음.
-
-    return createdNewReview;
-  }
-
-  //
-  static async showMyReviews({ userId: UserId }) {
-    const userId = await Review.findAll({
-      where: { UserId },
-    });
-    if (!userId) {
+    if (!getMyReviews) {
       const errorMessage = '작성하신 글이 없습니다';
       return { errorMessage };
-    } else {
-      return userId;
     }
+    return getMyReviews;
   }
 
-  //
-  static async showReview({ _id: id }) {
-    const reviewId = await Review.findOne({
-      where: { id: id },
+  // 한개 게시물 get해서 보기
+  static async showReview({ _id }) {
+    const review = await Review.findOne({
+      include: [
+        {
+          model: User,
+          right: true,
+          attributes: ['nickname', 'profileImg'],
+        },
+        {
+          model: AiSearchResult,
+          attributes: ['aiImage'],
+        },
+      ],
+      where: { id: _id },
     });
-    if (!reviewId) {
+
+    if (!review) {
       const errorMessage = '작성하신 글이 없습니다';
       return { errorMessage };
-    } else {
-      return reviewId;
     }
+    return review;
   }
 
   static async updateReview({ description, reviewId: id, userId }) {
@@ -123,6 +157,28 @@ class reviewService {
       const message = '후기가 삭제되었습니다.';
       return message;
     }
+  }
+
+  static async searchReviews({ search }) {
+    const searchResult = await Review.findAndCountAll({
+      include: {
+        model: AiSearchResult,
+        attributes: {
+          exclude: ['userId', 'id', 'dogName'],
+        },
+      },
+      where: {
+        description: {
+          [Op.like]: `%${search}%`,
+        },
+      },
+      order: [['id', 'DESC']],
+    });
+    if (searchResult.length === 0) {
+      const errorMessage = `Cannot find information about '${search}' `;
+      return errorMessage;
+    }
+    return searchResult;
   }
 }
 

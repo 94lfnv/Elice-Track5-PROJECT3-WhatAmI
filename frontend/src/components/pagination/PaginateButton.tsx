@@ -28,7 +28,7 @@ const PaginateButton = ({ page, setPage, totalPages }: PaginateButtonProps) => {
           <PaginateBtn
             key={p}
             onClick={() => handlePageBtnClick(p === null ? 1 : p)}
-            aria-current="page"
+            // className={page === idx + 1 ? 'color-btn' : ''}
           >
             {p}
           </PaginateBtn>
@@ -46,10 +46,10 @@ export default PaginateButton;
 const PaginateBox = styled.div`
   height: 2rem;
   width: 35rem;
-  margin-top: 0.7rem;
-  position: absolute;
+  position: relative;
   bottom: 2.5%;
   display: flex;
+  margin-top: 10px;
   justify-content: center;
 `;
 
@@ -58,13 +58,14 @@ const PaginateNav = styled.nav`
   justify-content: center;
   height: 3rem;
   width: 30rem;
+  align-items: center;
 `;
 
 const PaginateBtn = styled.button`
   display: flex;
   justify-content: center;
   color: ${theme.boldColor};
-  background: aliceblue;
+  background: ${theme.lightColor};
   width: 15px;
   height: 15px;
   padding: 16px;
@@ -75,7 +76,7 @@ const PaginateBtn = styled.button`
   margin-left: 5px;
 
   &:hover {
-    background: #fffcf1;
+    background: #fff6bf;
     cursor: pointer;
     transform: translateY(-2px);
   }
@@ -86,7 +87,7 @@ const PaginateBtn = styled.button`
     transform: revert;
   }
 
-  &[aria-current] {
+  &.color-btn {
     background: #fff6bf;
     font-weight: bold;
     cursor: revert;

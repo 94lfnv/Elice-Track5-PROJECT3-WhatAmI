@@ -12,6 +12,7 @@
   "dependencies": {
     "@sindresorhus/is": "^5.3.0",
     "aws-sdk": "^2.1261.0",
+    "axios": "^1.2.1",
     "bcrypt": "^5.1.0",
     "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.6",
@@ -31,7 +32,6 @@
     "passport-local": "^1.0.0",
     "sequelize": "^6.25.6",
     "sequelize-cli": "^6.5.2",
-    "uuidv4": "^6.2.13",
     "winston": "^3.8.2",
     "winston-daily-rotate-file": "^4.7.1"
   },
