@@ -77,32 +77,32 @@ Node.js & Express 코드의 양을 줄여 주고, 추후에 유지 보수에 용
 
 AI 종 분석
 <br>
-<img src="/uploads/12386b3df081ee35f42ff49f6371c290/AI_종_분석.gif"  width="600" height="360">
+![image](https://user-images.githubusercontent.com/99853367/220651212-7c384fb3-4e6d-490c-a3f1-94d38e75d759.png)
 <br>
 
 회원가입 및 회원정보 수정
 <br>
-![image](https://kdt-gitlab.elice.io/ai_track/class05/ai_project/team08/team08-project/uploads/14f75f9d0c6ef5000737c5085e601c18/KakaoTalk_20221215_153249555_01.gif)
+![image](https://user-images.githubusercontent.com/99853367/220651292-8b240f29-10b3-468a-8675-7c10be273e5c.png)
 <br>
 
 AI 종 분석 후기 작성 
 <br>
-<img src="/uploads/92abd79c74d46f1e9f361f13a6b9f85f/AI_종_분석_후기.gif"  width="600" height="360">
+![image](https://user-images.githubusercontent.com/99853367/220651389-b722d75c-63ff-485e-9f0d-1dfdc946551b.png)
 <br>
 
 커뮤니티 검색 및 좋아요 
 <br>
-![image](https://kdt-gitlab.elice.io/ai_track/class05/ai_project/team08/team08-project/uploads/9d09e32637108eb9eb9b7aec2d795c27/KakaoTalk_20221215_153249555.gif)
+![image](https://user-images.githubusercontent.com/99853367/220651500-f2b387a4-23b0-43a3-92bc-ff6afef0fceb.png)
 <br>
 
 커뮤니티 내 게시물 작성 및 댓글 기능
 <br>
-![image](https://kdt-gitlab.elice.io/ai_track/class05/ai_project/team08/team08-project//uploads/197204a6fe0f67262ada578e895f4f39/KakaoTalk_20221217_050315347.gif)
+![image](https://user-images.githubusercontent.com/99853367/220651547-ffba62ad-623f-4ac3-a4e5-83037f17c995.png)
 <br>
 
 좋아요를 누른 커뮤니티 및 내가 만든 커뮤니티 보기, 작성한 글을 모아보기
 <br>
-![image](https://kdt-gitlab.elice.io/ai_track/class05/ai_project/team08/team08-project/uploads/3a6dc6f4af33ac4f8b529c4b3a4050c8/KakaoTalk_20221215_153249555_02.gif)
+![image](https://user-images.githubusercontent.com/99853367/220651608-803734f0-75c9-44e4-810f-ef6f56e0019b.png)
 <br>
 
 #
